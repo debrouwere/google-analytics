@@ -58,9 +58,9 @@ class Account(object):
         raise NotImplementedError()
 
     @property
-    def query(self):
+    def query(self, *vargs, **kwargs):
         """ A shortcut to the first profile of the first webproperty. """
-        return self.webproperties[0].query
+        return self.webproperties[0].query(*vargs, **kwargs)
 
     def __repr__(self):
         return "<Account: {} ({})>".format(
@@ -84,10 +84,9 @@ class WebProperty(object):
         profiles = [Profile(raw, self) for raw in raw_profiles]
         return addressable.List(profiles, indices=['id', 'name'])        
 
-    @property
-    def query(self):
+    def query(self, *vargs, **kwargs):
         """ A shortcut to the first profile of this webproperty. """
-        return self.profiles[0].query
+        return self.profiles[0].query(*vargs, **kwargs)
 
     def __repr__(self):
         return "<WebProperty: {} ({})>".format(
@@ -101,9 +100,8 @@ class Profile(object):
         self.id = raw['id']
         self.name = raw['name']
 
-    @property
-    def query(self):
-        return query.CoreQuery(self)
+    def query(self, metrics=[], dimensions=[]):
+        return query.CoreQuery(self, metrics=metrics, dimensions=dimensions)
 
     def __repr__(self):
         return "<Profile: {} ({})>".format(

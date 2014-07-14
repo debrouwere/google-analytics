@@ -1,12 +1,44 @@
 from copy import copy
+import addressable
 import utils
 import account
 
 
+class Report(object):
+    def __init__(self, raw, query):
+        self.raw = raw
+        self.query = query
+
+        all_columns = self.query.profile.webproperty.account.columns
+        header_ids = [header['name'] for header in raw['columnHeaders']]
+        self.headers = addressable.filter(
+            lambda col: col.id in header_ids, 
+            all_columns)
+        self.rows = rows = raw['rows']
+        
+        self.totals = raw['totalsForAllResults']
+        # more intuitive when querying for just a single metric
+        self.total = raw['totalsForAllResults'].values()[0]
+
+    def __getitem__(self, key):
+        try:
+            i = self.headers.index(key)
+            return [row[i] for row in self.rows]
+        except ValueError:
+            raise ValueError(key + " not in column headers")
+
+    def __iter__(self):
+        raise NotImplementedError()
+
+    def __len__(self):
+        return len(self.rows)
+
+
 class Query(object):
-    def __init__(self, profile):
+    def __init__(self, profile, metrics=[], dimensions=[]):
         self.raw = {'ids': 'ga:' + profile.id}
         self.profile = profile
+        self._specify(metrics=metrics, dimensions=dimensions)
 
     def _normalize_column(self, value):
         if isinstance(value, account.Column):
@@ -28,23 +60,17 @@ class Query(object):
         query.raw = copy(self.raw)
         return query
 
-    """
-    metrics
-    dimensions
-    sort
-    filters
-    start-index
-    max-results
-    """
-
-    @utils.immutable
-    def query(self, metrics=[], dimensions=[]):
+    def _specify(self, metrics=[], dimensions=[]):
         metrics = self._serialize_columns(metrics)
         dimensions = self._serialize_columns(dimensions)
         self.raw.setdefault('metrics', []).extend(metrics)
         self.raw.setdefault('dimensions', []).extend(dimensions)
 
         return self
+
+    @utils.immutable
+    def specify(self, *vargs, **kwargs):
+        return self._specify(*vargs, **kwargs)
 
     @utils.immutable
     def sort(self):
@@ -71,11 +97,15 @@ class CoreQuery(Query):
     """
     # https://developers.google.com/analytics/devguides/reporting/core/v3/reference#q_summary
 
-    PRECISION_LEVELS = ['FASTER', 'DEFAULT', 'HIGH_PRECISION']
-    GRANULARITY_LEVELS = ['month', 'week', 'day']
+    PRECISION_LEVELS = ('FASTER', 'DEFAULT', 'HIGH_PRECISION', )
+    GRANULARITY_LEVELS = ('year', 'month', 'week', 'day', 'hour', )
+    GRANULARITY_DIMENSIONS = (
+        'ga:year', 'ga:yearMonth', 'ga:yearWeek', 
+        'ga:date', 'ga:dateHour',
+    )
 
     @utils.immutable
-    def range(self, start, stop=None, months=0, days=0, precision=1, granularity=2):
+    def range(self, start, stop=None, months=0, days=0, precision=1, granularity=None):
         start, stop = utils.daterange(start, stop, months, days)
 
         self.raw.update({
@@ -83,15 +113,47 @@ class CoreQuery(Query):
             'end_date': stop, 
         })
 
-        # if precision not in self.PRECISION_LEVELS:
-        #     levels = ", ".join(self.PRECISION_LEVELS)
-        #     raise ValueError("Granularity should be one of: " + levels)
+        if isinstance(precision, int):
+            precision = self.PRECISION_LEVELS[precision]
 
-        # if granularity not in self.GRANULARITY_LEVELS:
-        #     levels = ", ".join(self.GRANULARITY_LEVELS)
-        #     raise ValueError("Granularity should be one of: " + levels)
+        if precision not in self.PRECISION_LEVELS:
+            levels = ", ".join(self.PRECISION_LEVELS)
+            raise ValueError("Granularity should be one of: " + levels)
+
+        self.raw.update({'samplingLevel': precision})
+
+        if granularity:
+            if not isinstance(granularity, int):
+                if granularity in self.GRANULARITY_LEVELS:
+                    granularity = self.GRANULARITY_LEVELS.index(granularity)
+                else:
+                    levels = ", ".join(options.keys())
+                    raise ValueError("Granularity should be one of: " + levels)
+
+            dimension = self.GRANULARITY_DIMENSIONS[granularity]
+            self.raw['dimensions'].insert(0, dimension)
 
         return self
+
+    def hours(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'hour'
+        return self.range(*vargs, **kwargs)
+
+    def days(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'day'
+        return self.range(*vargs, **kwargs)
+
+    def weeks(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'week'
+        return self.range(*vargs, **kwargs)
+
+    def months(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'month'
+        return self.range(*vargs, **kwargs)
+
+    def years(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'year'
+        return self.range(*vargs, **kwargs)
 
     def live(self):
         # add in metrics, dimensions, sort, filters
@@ -104,10 +166,7 @@ class CoreQuery(Query):
 
         service = self.profile.webproperty.account.service
         res = service.data().ga().get(**raw).execute()
-        return res
-
-        #self.report = Report()
-        #return self.report
+        return Report(res, self)
 
     def __repr__(self):
         return "<Query: {}>".format(self.profile.name)

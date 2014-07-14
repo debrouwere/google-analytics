@@ -20,11 +20,25 @@ def date(obj):
         raise ValueError("Can only convert strings into dates, received {}".format(obj.__class__))
 
 
+def date_or_description(obj):
+    if isinstance(obj, basestring):
+        if obj in ['today', 'yesterday']:
+            return obj
+        elif obj.endswith('daysAgo'):
+            return obj
+        else:
+            return date(obj)
+
+
 def daterange(start, stop=None, months=0, days=0):
-    start = date(start)
-    stop = date(stop)
+    start = date_or_description(start)
+    stop = date_or_description(stop)
 
     if days or months:
+        if stop:
+            raise Exception(
+                "A daterange cannot be defined using stop alongside months or days.")
+
         stop = start + relativedelta(days=days-1, months=months)
     else:
         stop = stop or start

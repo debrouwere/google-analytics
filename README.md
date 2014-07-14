@@ -50,7 +50,7 @@ If you'd like to store the OAuth2 tokens so you don't have to ask for permission
 
 ## Querying
 
-The querying interface is still being tweaked. Currently, it looks like this.
+The querying interface currently looks like this.
 
     account = accounts[0]
     webproperty = account.webproperties[0]
@@ -60,8 +60,9 @@ The querying interface is still being tweaked. Currently, it looks like this.
     print account.dimensions
     print account.metrics['pageviews'] == account.metrics['ga:pageviews']
 
-    q = profile.query.query('pageviews').range('2014-06-01', days=5)
-    print q.execute()
+    q = profile.query('pageviews').range('2014-06-01', days=5)
+    report = q.execute()
+    print report['pageviews']
 
 ## CLI
 
@@ -75,11 +76,11 @@ The command-line interface currently comes with three subcommands:
 
 ## auth
 
-You may specify the client_id and client_secret on the 
+You may specify the `client_id` and `client_secret` on the 
 commandline, optionally prefaced with a short and more 
 easily-remembered name for this client.
 
-If no client_id and client_secret are specified, these 
+If no `client_id` and `client_secret` are specified, these 
 will be fetched from your environment variables, 
 by default these are in `GOOGLE_ANALYTICS_CLIENT_ID` and 
 `GOOGLE_ANALYTICS_CLIENT_SECRET` but you may specify a 

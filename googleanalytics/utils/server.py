@@ -3,7 +3,7 @@ from copy import copy
 
 def single_serve(message, port=5000):
     import logging
-    from flask import Flask, request
+    from flask import Flask, Response, request
 
     app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def single_serve(message, port=5000):
         request.environ.get('werkzeug.server.shutdown')()
         captured.update(dict(request.args.items()))
         print message
-        return message
+        return Response(message, mimetype='text/plain')
 
     app.run(port=port)
     return captured
