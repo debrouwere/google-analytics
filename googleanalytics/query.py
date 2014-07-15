@@ -22,9 +22,11 @@ class Report(object):
         self.rows.extend(raw['rows'])
         self.is_complete = not 'nextLink' in raw
         # TODO: figure out how this works with paginated queries
-        # self.totals = raw['totalsForAllResults']
+        self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
-        # self.total = raw['totalsForAllResults'].values()[0]
+        self.total = raw['totalsForAllResults'].values()[0]
+
+        print self.totals
 
     def __getitem__(self, key):
         try:

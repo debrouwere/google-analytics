@@ -1,33 +1,10 @@
+#!/usr/bin/env python
+
 import os
 import argparse
 import json
 import re
-import keyring
 import googleanalytics as ga
-
-
-DOMAIN = 'Google Analytics API'
-
-def get_secrets(name):
-    secrets = keyring.get_password(DOMAIN, name)
-
-    if secrets:
-        return json.loads(secrets)
-    else:
-        return None
-
-def delete_secrets(name):
-    keyring.delete_password(DOMAIN, name)
-
-def set_secrets(name, secrets):
-    keyring.set_password(DOMAIN, name, json.dumps(secrets))
-
-def get_tokens(identifiers):
-    name, client_id, client_secret = normalize_identification(identifiers)
-    suffix = name.upper()
-    tokens = ga.oauth.ask(client_id, client_secret, suffix=suffix)
-    set_secrets(name, tokens)
-    return tokens
 
 
 def normalize_identification(identification):
@@ -43,24 +20,26 @@ def normalize_identification(identification):
         client_id = os.environ
         name = identification[0]
     elif len(identification) == 0:
-        client_id = os.environ
+        if 'GOOGLE_ANALYTICS_CLIENT_ID' in os.environ \
+            and 'GOOGLE_ANALYTICS_CLIENT_SECRET' in os.environ:
+                client_id = os.environ
+        else:
+            name = raw_input('Human-readable account name: ')
+            client_id = raw_input('Client ID: ')
+            client_secret = raw_input('Client secret: ')
     else:
         raise ValueError()
 
-    return name, client_id, client_secret
+    return dict(name=name, client_id=client_id, client_secret=client_secret)
 
 
 def auth_command(arguments):
-    get_tokens(arguments.identifiers)
+    identification = normalize_identification(arguments.identifiers)
+    return ga.utils.keyring.authenticate(**identification)
 
 
 def revoke_command(arguments):
-    tokens = get_secrets(arguments.name)
-    if tokens:
-        ga.oauth.revoke(**tokens)
-        delete_secrets(arguments.name)
-    else:
-        print 'No tokens stored; cannot revoke.'
+    return ga.utils.keyring.revoke(arguments.name)
 
 
 def ls_command(arguments):
@@ -72,7 +51,7 @@ def ls_command(arguments):
         identifiers.append(None)
 
     name, account, webproperty, profile, pattern = identifiers
-    tokens = get_secrets(name) or get_tokens([name])
+    tokens = ga.utils.keyring.get(name) or auth_command(name)
     accounts = ga.oauth.ask_and_authenticate(**tokens)
 
     def print_list(l):
