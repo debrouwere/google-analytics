@@ -7,18 +7,24 @@ import account
 class Report(object):
     def __init__(self, raw, query):
         self.raw = raw
-        self.query = query
+        self.queries = []
 
-        all_columns = self.query.profile.webproperty.account.columns
+        all_columns = query.profile.webproperty.account.columns
         header_ids = [header['name'] for header in raw['columnHeaders']]
         self.headers = addressable.filter(
             lambda col: col.id in header_ids, 
             all_columns)
-        self.rows = rows = raw['rows']
-        
-        self.totals = raw['totalsForAllResults']
+        self.rows = []
+        self.append(raw, query)
+
+    def append(self, raw, query):
+        self.queries.append(query)
+        self.rows.extend(raw['rows'])
+        self.is_complete = not 'nextLink' in raw
+        # TODO: figure out how this works with paginated queries
+        # self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
-        self.total = raw['totalsForAllResults'].values()[0]
+        # self.total = raw['totalsForAllResults'].values()[0]
 
     def __getitem__(self, key):
         try:
@@ -35,8 +41,10 @@ class Report(object):
 
 
 class Query(object):
-    def __init__(self, profile, metrics=[], dimensions=[]):
+    def __init__(self, profile, metrics=[], dimensions=[], meta={}):
         self.raw = {'ids': 'ga:' + profile.id}
+        self.meta = {}
+        self.meta.update(meta)
         self.profile = profile
         self._specify(metrics=metrics, dimensions=dimensions)
 
@@ -56,7 +64,7 @@ class Query(object):
         return [self._serialize_column(value) for value in values]
 
     def clone(self):
-        query = self.__class__(self.profile)
+        query = self.__class__(profile=self.profile, meta=self.meta)
         query.raw = copy(self.raw)
         return query
 
@@ -79,10 +87,6 @@ class Query(object):
     @utils.immutable
     def filter(self):
         # filters
-        pass
-
-    def limit(self):
-        # start-index, max-results
         pass
 
 
@@ -135,6 +139,34 @@ class CoreQuery(Query):
 
         return self
 
+    @utils.immutable
+    def step(self, maximum):
+        """ Specify a maximum amount of results to be returned 
+        in any one request, without implying that we should stop 
+        fetching beyond that limit. Useful in debugging pagination
+        functionality, perhaps also when you want to be able to
+        decide whether to continue fetching data, based on the data
+        you've already received. """
+        self.raw['max_results'] = maximum
+
+    @utils.immutable
+    def limit(self, *_range):
+        # uses the same argument order as 
+        # LIMIT in a SQL database
+        if len(_range) == 2:
+            start, maximum = _range
+        else:
+            start = 1
+            maximum = _range[0]
+
+        self.meta['limit'] = maximum
+
+        self.raw.update({
+            'start_index': start, 
+            'max_results': maximum, 
+        })
+        return self
+
     def hours(self, *vargs, **kwargs):
         kwargs['granularity'] = 'hour'
         return self.range(*vargs, **kwargs)
@@ -157,7 +189,17 @@ class CoreQuery(Query):
 
     def live(self):
         # add in metrics, dimensions, sort, filters
+        raise NotImplementedError()
         return RealTimeQuery()
+
+    @utils.immutable
+    def next(self, start=None):
+        if not start:
+            step = self.raw.get('max_results', 1000)
+            start = step + 1
+
+        self.raw['start_index'] = start
+        return self
 
     def execute(self):
         raw = copy(self.raw)
@@ -165,8 +207,17 @@ class CoreQuery(Query):
         raw['dimensions'] = ','.join(self.raw['dimensions'])
 
         service = self.profile.webproperty.account.service
-        res = service.data().ga().get(**raw).execute()
-        return Report(res, self)
+        response = service.data().ga().get(**raw).execute()
+        
+        is_enough = self.meta.get('limit', float('inf')) < 1000
+        report = Report(response, self)
+        while not (is_enough or report.is_complete):
+            next_query = self.next()
+            next_report = next_query.execute()
+            report.append(next_report.raw, next_query)
+            is_enough = len(report.rows) >= self.meta.get('limit', float('inf'))
+
+        return report
 
     def __repr__(self):
         return "<Query: {}>".format(self.profile.name)

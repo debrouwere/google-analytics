@@ -103,6 +103,9 @@ class Profile(object):
     def query(self, metrics=[], dimensions=[]):
         return query.CoreQuery(self, metrics=metrics, dimensions=dimensions)
 
+    def live(self, metrics=[], dimensions=[]):
+        return query.LiveQuery(self, metrics=metrics, dimensions=dimensions)
+
     def __repr__(self):
         return "<Profile: {} ({})>".format(
             self.name, self.id)
