@@ -9,17 +9,20 @@ class Report(object):
         self.raw = raw
         self.queries = []
 
-        all_columns = query.profile.webproperty.account.columns
-        header_ids = [header['name'] for header in raw['columnHeaders']]
-        self.headers = addressable.filter(
-            lambda col: col.id in header_ids, 
-            all_columns)
+        registry = query.profile.webproperty.account.columns
+        headers = [registry[header['name']] for header in raw['columnHeaders']]
+        self.headers = addressable.List(headers, indices=registry.indexed_on)
         self.rows = []
         self.append(raw, query)
 
     def append(self, raw, query):
         self.queries.append(query)
-        self.rows.extend(raw['rows'])
+
+        casters = [column.cast for column in self.headers]
+        for row in raw['rows']:
+            typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
+            self.rows.append(typed_row)
+
         self.is_complete = not 'nextLink' in raw
         # TODO: figure out how this works with paginated queries
         self.totals = raw['totalsForAllResults']
@@ -94,10 +97,8 @@ class Query(object):
 
 class CoreQuery(Query):
     """
-    start-date
-    end-date
+    TODO: 
     segment
-    samplingLevel (DEFAULT, FASTER, HIGH_PRECISION)
     fields
     userIp / quotaUser
     """
@@ -150,6 +151,7 @@ class CoreQuery(Query):
         decide whether to continue fetching data, based on the data
         you've already received. """
         self.raw['max_results'] = maximum
+        return self
 
     @utils.immutable
     def limit(self, *_range):
@@ -223,28 +225,6 @@ class CoreQuery(Query):
 
     def __repr__(self):
         return "<Query: {}>".format(self.profile.name)
-
-    """
-    Queries return reports with a row per unit of time.
-    It should also be possible to ask for a sub-report 
-    using `report[metric]` which will then pick that 
-    data from each (global) row.
-    """
-
-    def __getitem__(self):
-        pass
-
-    def __iter__(self):
-        if not hasattr(self, 'report'):
-            self.execute()
-
-        return self.report.__iter__()
-
-    def __len__(self):
-        if not hasattr(self, 'report'):
-            self.execute()
-
-        return self.report.__len__()
 
 
 class RealTimeQuery(Query):

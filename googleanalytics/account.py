@@ -1,6 +1,7 @@
 import addressable
 import utils
 import query
+from dateutil.parser import parse as parse_date
 
 
 class Account(object):
@@ -125,15 +126,20 @@ service.metadata().columns().list(reportType='ga').execute()
 
 """
 
+TODO = NOOP = lambda x: x
+
 TYPES = {
     'STRING': unicode, 
     'INTEGER': int, 
     'FLOAT': float, 
-    'PERCENT': 'TODO', 
-    'TIME': 'TODO', 
-    'CURRENCY': 'TODO', 
+    'PERCENT': TODO, 
+    'TIME': TODO, 
+    'CURRENCY': TODO, 
 }
 
+DIMENSIONS = {
+    'ga:date': parse_date, 
+}
 
 class Column(object):
     def __init__(self, raw, account):
@@ -146,7 +152,7 @@ class Column(object):
         self.group = attributes['group']
         self.description = attributes['description']
         self.type = attributes['type'].lower()
-        self.cast = TYPES.get(attributes['dataType'], False)
+        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or NOOP
         self.is_deprecated = attributes['status'] == 'DEPRECATED'
         self.is_allowed_in_segments = 'allowedInSegments' in attributes
 
