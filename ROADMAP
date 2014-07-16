@@ -1,0 +1,5 @@
+* filtering
+* sorting
+* raw query modification
+* Google Analytics Live API
+* better (and better-tested) support for advanced dynamic segmentation
