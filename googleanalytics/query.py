@@ -6,7 +6,7 @@ import account
 
 class Report(object):
     def __init__(self, raw, query):
-        self.raw = raw
+        self.raw = []
         self.queries = []
 
         registry = query.profile.webproperty.account.columns
@@ -16,20 +16,22 @@ class Report(object):
         self.append(raw, query)
 
     def append(self, raw, query):
+        self.raw.append(raw)
         self.queries.append(query)
+        self.is_complete = not 'nextLink' in raw
 
         casters = [column.cast for column in self.headers]
-        for row in raw['rows']:
+
+        #print self.raw[-1]
+        for row in self.raw[-1]['rows']:
             typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
             self.rows.append(typed_row)
 
-        self.is_complete = not 'nextLink' in raw
         # TODO: figure out how this works with paginated queries
         self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
         self.total = raw['totalsForAllResults'].values()[0]
-
-        print self.totals
+        # print self.totals
 
     def __getitem__(self, key):
         try:
@@ -196,6 +198,9 @@ class CoreQuery(Query):
 
     @utils.immutable
     def limit(self, *_range):
+        """ Please not carefully that Google Analytics uses 
+        1-indexing on its rows. """
+
         # uses the same argument order as 
         # LIMIT in a SQL database
         if len(_range) == 2:
@@ -246,15 +251,13 @@ class CoreQuery(Query):
         return RealTimeQuery(metrics=self.metrics, dimensions=self.dimensions)
 
     @utils.immutable
-    def next(self, start=None):
-        if not start:
-            step = self.raw.get('max_results', 1000)
-            start = step + 1
-
+    def next(self):
+        step = self.raw.get('max_results', 1000)
+        start = self.raw.get('start_index', 1) + step
         self.raw['start_index'] = start
         return self
 
-    def execute(self):
+    def _execute(self):
         raw = copy(self.raw)
         raw['metrics'] = ','.join(self.raw['metrics'])
         raw['dimensions'] = ','.join(self.raw['dimensions'])
@@ -262,13 +265,25 @@ class CoreQuery(Query):
         service = self.account.service
         response = service.data().ga().get(**raw).execute()
         
-        is_enough = self.meta.get('limit', float('inf')) < 1000
-        report = Report(response, self)
-        while not (is_enough or report.is_complete):
-            next_query = self.next()
-            next_report = next_query.execute()
-            report.append(next_report.raw, next_query)
+        return Report(response, self)        
+
+    def execute(self):
+        cursor = self
+        report = None
+        is_complete = False
+        is_enough = False
+
+        while not (is_enough or is_complete):
+            chunk = cursor._execute()
+
+            if report:
+                report.append(chunk.raw[0], cursor)
+            else:
+                report = chunk
+
             is_enough = len(report.rows) >= self.meta.get('limit', float('inf'))
+            is_complete = chunk.is_complete
+            cursor = cursor.next()
 
         return report
 
