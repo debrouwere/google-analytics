@@ -1,7 +1,7 @@
 import addressable
 import utils
+from columns import Column, Segment
 import query
-from dateutil.parser import parse as parse_date
 
 
 class Account(object):
@@ -50,8 +50,9 @@ class Account(object):
     @property
     @utils.memoize
     def segments(self):
-        _segments = self.service.management().segments().list().execute()
-        return addressable.List(_segments, indices=['id', 'name'])
+        raw_segments = self.service.management().segments().list().execute()
+        return addressable.List([Segment(raw, self) for raw in raw_segments], 
+            indices=['id', 'name'])
 
     @property
     @utils.memoize
@@ -98,6 +99,7 @@ class Profile(object):
     def __init__(self, raw, webproperty):
         self.raw = raw
         self.webproperty = webproperty
+        self.account = webproperty.account
         self.id = raw['id']
         self.name = raw['name']
 
@@ -110,82 +112,3 @@ class Profile(object):
     def __repr__(self):
         return "<Profile: {} ({})>".format(
             self.name, self.id)
-
-
-"""
-service.metadata().columns().list(reportType='ga').execute()
-
-            {u'attributes': {u'dataType': u'STRING',
-                             u'description': u'Name of the product being queried.',
-                             u'group': u'Related Products',
-                             u'status': u'PUBLIC',
-                             u'type': u'DIMENSION',
-                             u'uiName': u'Queried Product Name'},
-             u'id': u'ga:queryProductName',
-             u'kind': u'analytics#column'},
-
-"""
-
-TODO = NOOP = lambda x: x
-
-TYPES = {
-    'STRING': unicode, 
-    'INTEGER': int, 
-    'FLOAT': float, 
-    'PERCENT': TODO, 
-    'TIME': TODO, 
-    'CURRENCY': TODO, 
-}
-
-DIMENSIONS = {
-    'ga:date': parse_date, 
-}
-
-class Column(object):
-    def __init__(self, raw, account):
-        attributes = raw['attributes']
-        self.raw = raw
-        self.account = account
-        self.id = raw['id']
-        self.slug = raw['id'].split(':')[1]
-        self.name = attributes['uiName']
-        self.group = attributes['group']
-        self.description = attributes['description']
-        self.type = attributes['type'].lower()
-        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or NOOP
-        self.is_deprecated = attributes['status'] == 'DEPRECATED'
-        self.is_allowed_in_segments = 'allowedInSegments' in attributes
-
-    def __repr__(self):
-        return "<{type}: {name} ({id})>".format(
-            type=self.type.capitalize(), 
-            name=self.name, 
-            id=self.id
-            )
-
-
-class Segment(object):
-    def __init__(self, raw, account):
-        self.raw = raw
-        self.id = raw['id']
-        self.name = raw['name']
-        self.kind = raw['kind'].lower()
-        self.definition = raw['definition']
-
-    def __repr__(self):
-        return "<Segment: {name} ({id})>".format(**self.__dict__)
-
-
-class Filter(object):
-    pass
-
-
-class Goal(object):
-    pass
-
-    """
-     goals = service.management().goals().list(
-            accountId=firstAccountId,
-            webPropertyId=firstWebpropertyId,
-            profileId=firstProfileId).execute()
-    """

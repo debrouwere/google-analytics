@@ -45,19 +45,40 @@ class Report(object):
         return len(self.rows)
 
 
+def condition(value):
+    return "condition::" + value
+
+def sequence(value):
+    return "sequence::" + value
+
+def all(*values):
+    return condition(";".join(values))
+
+def any(*values):
+    return condition(",".join(values))
+
+def followed_by(*values):
+    return sequence(";->>".join(values))
+
+def immediately_followed_by(*values):
+    return sequence(";->".join(values))
+
+
 class Query(object):
     def __init__(self, profile, metrics=[], dimensions=[], meta={}):
         self.raw = {'ids': 'ga:' + profile.id}
         self.meta = {}
         self.meta.update(meta)
         self.profile = profile
+        self.webproperty = profile.webproperty
+        self.account = profile.webproperty.account
         self._specify(metrics=metrics, dimensions=dimensions)
 
     def _normalize_column(self, value):
         if isinstance(value, account.Column):
             return value
         else:
-            return self.profile.webproperty.account.columns[value]
+            return self.account.columns[value]
 
     def _serialize_column(self, value):
         return self._normalize_column(value).id
@@ -142,6 +163,26 @@ class CoreQuery(Query):
 
         return self
 
+    def hours(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'hour'
+        return self.range(*vargs, **kwargs)
+
+    def days(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'day'
+        return self.range(*vargs, **kwargs)
+
+    def weeks(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'week'
+        return self.range(*vargs, **kwargs)
+
+    def months(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'month'
+        return self.range(*vargs, **kwargs)
+
+    def years(self, *vargs, **kwargs):
+        kwargs['granularity'] = 'year'
+        return self.range(*vargs, **kwargs)
+
     @utils.immutable
     def step(self, maximum):
         """ Specify a maximum amount of results to be returned 
@@ -171,30 +212,61 @@ class CoreQuery(Query):
         })
         return self
 
-    def hours(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'hour'
-        return self.range(*vargs, **kwargs)
+    @utils.immutable
+    def segment(self, value, type=None):
+        """
+        E.g.
 
-    def days(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'day'
-        return self.range(*vargs, **kwargs)
+        query.segment(account.segments['browser'])
+        query.segment('browser')
+        query.segment(account.segments['browser'].any('Chrome', 'Firefox'))
 
-    def weeks(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'week'
-        return self.range(*vargs, **kwargs)
+        You can also use the `any`, `all`, `followed_by` and 
+        `immediately_followed_by` functions in this module to 
+        chain together segments. (Experimental.)
+        """
 
-    def months(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'month'
-        return self.range(*vargs, **kwargs)
+        # TODO / NOTE: support for dynamic segments using 
+        # conditions and sequences is barebones at the moment
+        if type:
+            value = "{type}::{value}".format(type=type, value=value)
+        else:
+            # try to see if there's a builtin or custom (regular)
+            # segment matching the supplied value
+            if not isinstance(value, account.Segment):
+                value = self.account.segments[value]
 
-    def years(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'year'
-        return self.range(*vargs, **kwargs)
+        self.raw['segment'] = value
+        return self
+
+
+    @utils.immutable
+    def dynamic_segment(self, type, *conditions):
+        if type not in ['users', 'sessions']:
+            raise ValueError("type must be one of: users, sessions")
+
+        if len(conditions) and len(condition_kwargs):
+            raise ValueError("specify ")
+
+    def condition(self, value):
+        return self.conditions(value)
+
+    def conditions(self, *vargs):
+        # TODO: ultimately we want to be able to 
+        # go from a dict or keyword arguments, e.g. 
+        # segment.conditions(city='London', browser='Chrome')
+        # to 
+        # users::condition::ga:city==London;ga:browser==Chrome
+        return ";"
+
+
+
 
     def live(self):
+        """ Turn a regular query into one for the live API. """
         # add in metrics, dimensions, sort, filters
         raise NotImplementedError()
-        return RealTimeQuery()
+        return RealTimeQuery(metrics=self.metrics, dimensions=self.dimensions)
 
     @utils.immutable
     def next(self, start=None):
@@ -210,7 +282,7 @@ class CoreQuery(Query):
         raw['metrics'] = ','.join(self.raw['metrics'])
         raw['dimensions'] = ','.join(self.raw['dimensions'])
 
-        service = self.profile.webproperty.account.service
+        service = self.account.service
         response = service.data().ga().get(**raw).execute()
         
         is_enough = self.meta.get('limit', float('inf')) < 1000
