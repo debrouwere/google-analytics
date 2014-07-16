@@ -70,7 +70,7 @@ def escape(method):
 class Segment(object):
     def __init__(self, raw, account):
         self.raw = raw
-        self.id = raw['id']
+        self.id = raw['segmentId']
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']

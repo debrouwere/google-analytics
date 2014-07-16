@@ -50,7 +50,7 @@ class Account(object):
     @property
     @utils.memoize
     def segments(self):
-        raw_segments = self.service.management().segments().list().execute()
+        raw_segments = self.service.management().segments().list().execute()['items']
         return addressable.List([Segment(raw, self) for raw in raw_segments], 
             indices=['id', 'name'])
 

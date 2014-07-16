@@ -51,6 +51,10 @@ def query(profile):
 
     #pprint(report.raw)
 
+    q = profile.query('pageviews').days('2014-06-01').segment('Direct Traffic')
+    report = q.execute()
+    print report['pageviews']
+
 if __name__ == '__main__':
     accounts = authenticate_with_keyring()
     profile = first(accounts)

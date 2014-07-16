@@ -236,31 +236,8 @@ class CoreQuery(Query):
             if not isinstance(value, account.Segment):
                 value = self.account.segments[value]
 
-        self.raw['segment'] = value
+        self.raw['segment'] = value.id
         return self
-
-
-    @utils.immutable
-    def dynamic_segment(self, type, *conditions):
-        if type not in ['users', 'sessions']:
-            raise ValueError("type must be one of: users, sessions")
-
-        if len(conditions) and len(condition_kwargs):
-            raise ValueError("specify ")
-
-    def condition(self, value):
-        return self.conditions(value)
-
-    def conditions(self, *vargs):
-        # TODO: ultimately we want to be able to 
-        # go from a dict or keyword arguments, e.g. 
-        # segment.conditions(city='London', browser='Chrome')
-        # to 
-        # users::condition::ga:city==London;ga:browser==Chrome
-        return ";"
-
-
-
 
     def live(self):
         """ Turn a regular query into one for the live API. """
