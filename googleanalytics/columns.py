@@ -45,6 +45,10 @@ class Column(object):
         self.is_deprecated = attributes['status'] == 'DEPRECATED'
         self.is_allowed_in_segments = 'allowedInSegments' in attributes
 
+    # useful when sorting a query
+    def __neg__(self):
+        return '-' + self.id
+
     def __repr__(self):
         return "<{type}: {name} ({id})>".format(
             type=self.type.capitalize(), 

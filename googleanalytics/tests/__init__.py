@@ -155,6 +155,28 @@ class TestQuerying(unittest.TestCase):
         self.assertEqual(len(limited_report), 2)
         self.assertEqual(full_report['pageviews'][1:3], limited_report['pageviews'])
 
+    def test_sort(self):
+        """ It can ask the Google Analytics API for sorted results. """
+        q = self \
+            .query('pageviews') \
+            .range('2014-07-01', '2014-07-05', granularity='day')
+
+        unsorted_report = q.execute()
+        sorted_report = q \
+            .sort('pageviews').execute()
+        inverse_sorted_report = q \
+            .sort(-self.account.columns['pageviews']).execute()
+
+        self.assertEqual(inverse_sorted_report.queries[0].raw['sort'], '-ga:pageviews')
+        self.assertEqual(
+            set(unsorted_report['pageviews']), 
+            set(sorted_report['pageviews']), 
+        )
+        self.assertEqual(
+            sorted_report['pageviews'], 
+            inverse_sorted_report['pageviews'][::-1], 
+        )
+
     def test_cast_numbers(self):
         """ It should cast columns that contain numeric data to the 
         proper numeric types. """

@@ -2,6 +2,7 @@ from copy import copy
 import addressable
 import utils
 import account
+import columns
 
 
 class Report(object):
@@ -109,8 +110,28 @@ class Query(object):
         return self._specify(*vargs, **kwargs)
 
     @utils.immutable
-    def sort(self):
-        pass
+    def sort(self, *columns):
+        sorts = []
+
+        for column in columns:          
+            if isinstance(column, account.Column):
+                ascending = False
+                identifier = column.id
+            elif isinstance(column, basestring):
+                ascending = column.startswith('-')
+                identifier = self.account.columns[column.lstrip('-')].id
+            else:
+                raise ValueError()
+
+            if ascending:
+                sign = '-'
+            else:
+                sign = ''
+
+            sorts.append(sign + identifier) 
+
+        self.raw['sort'] = ",".join(sorts)
+        return self
 
     @utils.immutable
     def filter(self):
