@@ -30,32 +30,6 @@ DIMENSIONS = {
     'ga:date': parse_date, 
 }
 
-class Column(object):
-    def __init__(self, raw, account):
-        attributes = raw['attributes']
-        self.raw = raw
-        self.account = account
-        self.id = raw['id']
-        self.slug = raw['id'].split(':')[1]
-        self.name = attributes['uiName']
-        self.group = attributes['group']
-        self.description = attributes['description']
-        self.type = attributes['type'].lower()
-        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or NOOP
-        self.is_deprecated = attributes['status'] == 'DEPRECATED'
-        self.is_allowed_in_segments = 'allowedInSegments' in attributes
-
-    # useful when sorting a query
-    def __neg__(self):
-        return '-' + self.id
-
-    def __repr__(self):
-        return "<{type}: {name} ({id})>".format(
-            type=self.type.capitalize(), 
-            name=self.name, 
-            id=self.id
-            )
-
 
 def escape_chars(value, chars=',;'):
     for char in chars:
@@ -70,14 +44,20 @@ def escape(method):
     return escaped_method
 
 
-# see https://developers.google.com/analytics/devguides/reporting/core/v3/segments#reference
-class Segment(object):
+class Column(object):
     def __init__(self, raw, account):
+        attributes = raw['attributes']
         self.raw = raw
-        self.id = raw['segmentId']
-        self.name = raw['name']
-        self.kind = raw['kind'].lower()
-        self.definition = raw['definition']
+        self.account = account
+        self.id = raw['id']
+        self.slug = raw['id'].split(':')[1]
+        self.name = attributes['uiName']
+        self.group = attributes['group']
+        self.description = attributes['description']
+        self.type = attributes['type'].lower()
+        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or NOOP
+        self.is_deprecated = attributes['status'] == 'DEPRECATED'
+        self.is_allowed_in_segments = 'allowedInSegments' in attributes
 
     @escape
     def eq(self, value):
@@ -126,6 +106,27 @@ class Segment(object):
     @escape
     def nre(self, value):
         return "{id}!~{value}".format(id=self.id, value=value)
+
+    # useful when sorting a query
+    def __neg__(self):
+        return '-' + self.id
+
+    def __repr__(self):
+        return "<{type}: {name} ({id})>".format(
+            type=self.type.capitalize(), 
+            name=self.name, 
+            id=self.id
+            )
+
+
+# see https://developers.google.com/analytics/devguides/reporting/core/v3/segments#reference
+class Segment(Column):
+    def __init__(self, raw, account):
+        self.raw = raw
+        self.id = raw['segmentId']
+        self.name = raw['name']
+        self.kind = raw['kind'].lower()
+        self.definition = raw['definition']
 
     def __repr__(self):
         return "<Segment: {name} ({id})>".format(**self.__dict__)

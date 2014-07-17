@@ -12,7 +12,8 @@ class Report(object):
 
         registry = query.profile.webproperty.account.columns
         headers = [registry[header['name']] for header in raw['columnHeaders']]
-        self.headers = addressable.List(headers, indices=registry.indexed_on)
+        self.headers = addressable.List(headers, 
+            indices=registry.indexed_on, insensitive=True)
         self.rows = []
         self.append(raw, query)
 
@@ -23,8 +24,9 @@ class Report(object):
 
         casters = [column.cast for column in self.headers]
 
-        #print self.raw[-1]
-        for row in self.raw[-1]['rows']:
+        # if no rows were returned, the GA API doesn't 
+        # include the `rows` key at all
+        for row in self.raw[-1].get('rows', []):
             typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
             self.rows.append(typed_row)
 
@@ -77,6 +79,15 @@ class Query(object):
         self.account = profile.webproperty.account
         self._specify(metrics=metrics, dimensions=dimensions)
 
+    def _serialize_criterion(criterion):
+        pattern = r'(?P<identifier>[\w:]+)((?P<operator>[\!\=\>\<\@\~]+)(?P<value>[\w:]+))?'
+        match = re.match(pattern, criterion)
+        identifier = match.group('identifier')
+        operator = match.group('operator') or ''
+        value = match.group('value') or ''
+        column = self._serialize_column(identifier)
+        return column + operator + value
+
     def _normalize_column(self, value):
         if isinstance(value, account.Column):
             return value
@@ -91,6 +102,15 @@ class Query(object):
             values = [values]
 
         return [self._serialize_column(value) for value in values]
+
+    def _normalize_segment(self, value):
+        if isinstance(value, account.Segment):
+            return value
+        else:
+            return self.account.segments[value]
+    
+    def _serialize_segment(self, value):
+        return self._normalize_segment(value).id
 
     def clone(self):
         query = self.__class__(profile=self.profile, meta=self.meta)
@@ -134,9 +154,10 @@ class Query(object):
         return self
 
     @utils.immutable
-    def filter(self):
-        # filters
-        pass
+    def filter(self, value):
+        """ Most of the actual functionality lives on the Column 
+        object and the `all` and `any` functions. """
+        self.raw['filters'] = value
 
 
 class CoreQuery(Query):
@@ -257,12 +278,9 @@ class CoreQuery(Query):
         if type:
             value = "{type}::{value}".format(type=type, value=value)
         else:
-            # try to see if there's a builtin or custom (regular)
-            # segment matching the supplied value
-            if not isinstance(value, account.Segment):
-                value = self.account.segments[value]
+            value = self._serialize_segment(value)
 
-        self.raw['segment'] = value.id
+        self.raw['segment'] = value
         return self
 
     def live(self):
