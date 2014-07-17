@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 setup(name='googleanalytics',
     description='A wrapper for the Google Analytics API.',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     author='Stijn Debrouwere',
     author_email='stijn@stdout.be',
     url='http://stdbrouw.github.com/python-google-analytics/',
     download_url='http://www.github.com/stdbrouw/python-google-analytics/tarball/master',
     version='0.3.0',
-    license='MIT',
+    license='ISC',
     packages=find_packages(),
     keywords='data analytics api wrapper google',
     scripts=[
