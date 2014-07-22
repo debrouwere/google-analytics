@@ -112,10 +112,40 @@ class Query(object):
     def _serialize_segment(self, value):
         return self._normalize_segment(value).id
 
+    def _serialize(self, obj):
+        if isinstance(obj, list):
+            return [self._serialize(el) for el in obj]
+        elif isinstance(obj, account.Column):
+            return obj.id
+        else:
+            return obj
+
     def clone(self):
         query = self.__class__(profile=self.profile, meta=self.meta)
         query.raw = copy(self.raw)
         return query
+
+    @utils.immutable
+    def set(self, key=None, value=None, **kwargs):
+        """
+        `set` is a way to add raw properties to the request, 
+        for features that python-google-analytics does not 
+        support or supports incompletely. For convenience's 
+        sake, it will serialize Column objects but will 
+        leave any other kind of value alone.
+        """
+
+        if key and value:
+            self.raw[key] = self._serialize(value)
+        elif key or kwargs:
+            properties = key or kwargs
+            for key, value in properties.items():
+                self.raw[key] = self._serialize(value)
+        else:
+            raise ValueError(
+                "Query#set requires a key and value, a properties dictionary or keyword arguments.")
+
+        return self
 
     def _specify(self, metrics=[], dimensions=[]):
         metrics = self._serialize_columns(metrics)
@@ -192,7 +222,8 @@ class CoreQuery(Query):
             levels = ", ".join(self.PRECISION_LEVELS)
             raise ValueError("Granularity should be one of: " + levels)
 
-        self.raw.update({'samplingLevel': precision})
+        if precision != 'DEFAULT':
+            self.raw.update({'samplingLevel': precision})
 
         if granularity:
             if not isinstance(granularity, int):

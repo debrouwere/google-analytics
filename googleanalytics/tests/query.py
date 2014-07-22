@@ -18,6 +18,16 @@ class TestQueryingBase(unittest.TestCase):
             self.query = self.profile.query
 
 class TestQuerying(TestQueryingBase):
+    def test_raw(self):
+        """ It should allow people to construct raw queries. """
+        a = self.query('pageviews').range('2014-07-01', '2014-07-05')
+        b = self.query() \
+            .set(metrics=['ga:pageviews']) \
+            .set('start_date', '2014-07-01') \
+            .set({'end_date': '2014-07-05'})
+
+        self.assertEqual(a.raw, b.raw)
+
     def test_range_days(self):
         """ It should support various ways of defining date ranges, 
         and these will result in the correct start and end dates. """
