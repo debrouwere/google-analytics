@@ -77,10 +77,23 @@ tokens for later use. Here's one way that could work:
 
     accounts = ga.oauth.authenticate(**tokens)
 
+As a convenience, we've also made it easy to store your credentials in
+your operating system's keychain.
+
+::
+
+    import googleanalytics as ga
+    client = dict(
+        client_id='myproj.apps.googleusercontent.com', 
+        client_secret='mysecret'
+    )
+
+    accounts = ga.utils.keyring.ask_and_authenticate('my-app', **client)
+
 Querying
 --------
 
-The querying interface currently looks like this.
+The querying interface looks like this.
 
 ::
 
@@ -90,11 +103,74 @@ The querying interface currently looks like this.
 
     print account.metrics
     print account.dimensions
+    # call metrics and other columns by their name, their full id
+    # or their slug (the id without the `ga:` prefix)
     print account.metrics['pageviews'] == account.metrics['ga:pageviews']
 
     q = profile.query('pageviews').range('2014-06-01', days=5)
     report = q.execute()
     print report['pageviews']
+
+Here's the basic list of methods:
+
+::
+
+    query
+        .sort
+        .filter
+        .range
+        .hours
+        .days
+        .weeks
+        .months
+        .years
+        .limit
+        .segment
+
+Querying closer to the metal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This package is still in beta and you should expect some things not to
+work.
+
+In these cases, it can be useful to use the lower-level access this
+module provides through the ``query.set`` method -- you can pass set
+either a key and value, a dictionary with key-value pairs or you can
+pass keyword arguments. These will then be added to the raw query. You
+can always check what the raw query is going to be with the build method
+on queries.
+
+::
+
+    query = profile.query() \
+        .set(metrics=['ga:pageviews']) \
+        .set(dimensions=['ga:yearMonth']) \
+        .set('start_date', '2014-07-01') \
+        .set({'end_date': '2014-07-05'})
+
+Secondly, don't forget that you can access the raw query as well as raw
+report data in ``query.raw`` and ``report.raw`` respectively.
+
+::
+
+    from pprint import pprint
+    pprint(query.raw)
+    report = query.execute()
+    pprint(report.raw)
+
+Finally, if you'd like to just use the simplified oAuth functionality in
+python-google-analytics, that's possible too.
+
+::
+
+    accounts = ga.oauth.authenticate(**tokens)
+    raw_query = {
+        'metrics': ['ga:pageviews'], 
+        'dimensions': ['ga:yearMonth'], 
+        'start_date': '2014-07-01', 
+        'end_date': '2014-07-05', 
+    }
+    accounts[0].service.data().ga().get(raw_query).execute()
 
 CLI
 ---
