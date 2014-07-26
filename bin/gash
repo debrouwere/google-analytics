@@ -13,7 +13,7 @@ def normalize_identification(identification):
 
     if len(identification) == 3:
         name, client_id, client_secret = identification
-    if len(identification) == 2:
+    elif len(identification) == 2:
         client_id, client_secret = identification
         name = client_id
     elif len(identification) == 1:
@@ -34,7 +34,12 @@ def normalize_identification(identification):
 
 
 def auth_command(arguments):
-    identification = normalize_identification(arguments.identifiers)
+    if hasattr(arguments, 'identifiers'):
+        identifiers = arguments.identifiers
+    else:
+        identifiers = arguments
+
+    identification = normalize_identification(identifiers)
     return ga.utils.keyring.ask_and_authenticate(**identification)
 
 
@@ -51,7 +56,7 @@ def ls_command(arguments):
         identifiers.append(None)
 
     name, account, webproperty, profile, pattern = identifiers
-    tokens = ga.utils.keyring.get(name) or auth_command(name)
+    tokens = ga.utils.keyring.get(name) or auth_command([name])
     accounts = ga.oauth.ask_and_authenticate(**tokens)
 
     def print_list(l):
