@@ -1,3 +1,4 @@
+import re
 import functools
 from dateutil.parser import parse as parse_date
 
@@ -51,6 +52,7 @@ class Column(object):
         self.account = account
         self.id = raw['id']
         self.slug = raw['id'].split(':')[1]
+        self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
         self.name = attributes['uiName']
         self.group = attributes['group']
         self.description = attributes['description']

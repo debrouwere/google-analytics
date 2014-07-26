@@ -1,4 +1,5 @@
 from copy import copy
+import collections
 import addressable
 import utils
 import account
@@ -12,6 +13,8 @@ class Report(object):
 
         registry = query.profile.webproperty.account.columns
         headers = [registry[header['name']] for header in raw['columnHeaders']]
+        slugs = [header.pyslug for header in headers]
+        self.row_cls = collections.namedtuple('Row', slugs)
         self.headers = addressable.List(headers, 
             indices=registry.indexed_on, insensitive=True)
         self.rows = []
@@ -28,7 +31,8 @@ class Report(object):
         # include the `rows` key at all
         for row in self.raw[-1].get('rows', []):
             typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
-            self.rows.append(typed_row)
+            typed_tuple = self.row_cls(*typed_row)
+            self.rows.append(typed_tuple)
 
         # TODO: figure out how this works with paginated queries
         self.totals = raw['totalsForAllResults']
