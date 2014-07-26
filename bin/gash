@@ -35,7 +35,7 @@ def normalize_identification(identification):
 
 def auth_command(arguments):
     identification = normalize_identification(arguments.identifiers)
-    return ga.utils.keyring.authenticate(**identification)
+    return ga.utils.keyring.ask_and_authenticate(**identification)
 
 
 def revoke_command(arguments):
