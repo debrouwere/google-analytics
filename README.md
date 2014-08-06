@@ -82,11 +82,11 @@ Here's the basic list of methods:
         .sort
         .filter
         .range
-        .hours
-        .days
-        .weeks
-        .months
-        .years
+        .hourly
+        .daily
+        .weekly
+        .monthly
+        .yearly
         .limit
         .segment
 

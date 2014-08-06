@@ -82,7 +82,7 @@ class TestQuerying(TestQueryingBase):
         base = self.query('pageviews')
         a = base.range('2014-07-01', '2014-07-03').execute()
         b = base.range('2014-07-01', '2014-07-03', granularity='day').execute()
-        c = base.days('2014-07-01', '2014-07-03').execute()
+        c = base.daily('2014-07-01', '2014-07-03').execute()
 
         self.assertEqual(len(a), 1)
         self.assertEqual(len(b), 3)
@@ -148,7 +148,7 @@ class TestQuerying(TestQueryingBase):
     def test_cast_numbers(self):
         """ It should cast columns that contain numeric data to the 
         proper numeric types. """
-        q = self.query('pageviews').days('2014-07-01', '2014-07-02')
+        q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
         report = q.execute()
 
         for n in report['pageviews']:
@@ -156,7 +156,7 @@ class TestQuerying(TestQueryingBase):
 
     def test_cast_dates(self):
         """ It should cast columns containing dates to proper date objects. """
-        q = self.query('pageviews').days('2014-07-01', '2014-07-02')
+        q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
         report = q.execute()
 
         for date in report['date']:

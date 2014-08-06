@@ -242,23 +242,23 @@ class CoreQuery(Query):
 
         return self
 
-    def hours(self, *vargs, **kwargs):
+    def hourly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'hour'
         return self.range(*vargs, **kwargs)
 
-    def days(self, *vargs, **kwargs):
+    def daily(self, *vargs, **kwargs):
         kwargs['granularity'] = 'day'
         return self.range(*vargs, **kwargs)
 
-    def weeks(self, *vargs, **kwargs):
+    def weekly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'week'
         return self.range(*vargs, **kwargs)
 
-    def months(self, *vargs, **kwargs):
+    def monthly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'month'
         return self.range(*vargs, **kwargs)
 
-    def years(self, *vargs, **kwargs):
+    def yearly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'year'
         return self.range(*vargs, **kwargs)
 
