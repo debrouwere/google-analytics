@@ -4,10 +4,21 @@ import argparse
 import webbrowser
 import addressable
 import oauth2client
-from oauth2client import client, tools
+from oauth2client import client
 from apiclient import discovery
 import utils
 import account
+
+
+class Flow(client.OAuth2WebServerFlow):
+    def __init__(self, client_id, client_secret, redirect_uri):
+        super(Flow, self).__init__(client_id, client_secret, 
+            scope='https://www.googleapis.com/auth/analytics.readonly', 
+            redirect_uri=redirect_uri)
+
+    def step2_exchange(self, code):
+        credentials = super(Flow, self).step2_exchange(code)
+        return serialize_credentials(credentials)
 
 
 def credentials_from_tokens(client_id, client_secret, access_token=None, refresh_token=None):
@@ -58,9 +69,8 @@ def ask(client_id, client_secret=None, access_token=None, refresh_token=None, po
             'refresh_token': refresh_token, 
         }
 
-    client_id, client_secret = normalize_client_secrets(client_id, client_secret)
-    flow = client.OAuth2WebServerFlow(client_id, client_secret, 
-        scope='https://www.googleapis.com/auth/analytics.readonly', 
+    client_id, client_secret = normalize_client_secrets(client_id, client_secret, prefix, suffix)
+    flow = Flow(client_id, client_secret, 
         redirect_uri='http://localhost:{port}/'.format(port=port))
 
     authorize_url = flow.step1_get_authorize_url()
@@ -68,8 +78,7 @@ def ask(client_id, client_secret=None, access_token=None, refresh_token=None, po
     qs = utils.single_serve(
         message='Authentication flow completed. You may close the browser tab.', 
         port=port)
-    credentials = flow.step2_exchange(qs['code'])    
-    return serialize_credentials(credentials)
+    return flow.step2_exchange(qs['code'])    
 
 
 def revoke(client_id, client_secret, access_token=None, refresh_token=None):

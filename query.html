@@ -1,0 +1,59 @@
+<h1 id="none">None</h1>
+<p>None</p>
+<h3 id="class-corequeryprofile-metrics-dimensions-meta"><code>class CoreQuery(profile, metrics={}, dimensions=[], meta=[])</code></h3>
+<p>TODO: segment fields userIp / quotaUser</p>
+<h4 id="section">``</h4>
+<h4 id="section-1">``</h4>
+<h4 id="section-2">``</h4>
+<h4 id="clone"><code>clone()</code></h4>
+<h4 id="dailyvargs-kwargs"><code>daily(*vargs, **kwargs)</code></h4>
+<h4 id="execute"><code>execute()</code></h4>
+<h4 id="filtervargs-kwargs"><code>filter(*vargs, **kwargs)</code></h4>
+<p>Most of the actual functionality lives on the Column object and the <code>all</code> and <code>any</code> functions.</p>
+<h4 id="hourlyvargs-kwargs"><code>hourly(*vargs, **kwargs)</code></h4>
+<h4 id="limitvargs-kwargs"><code>limit(*vargs, **kwargs)</code></h4>
+<p>Please not carefully that Google Analytics uses 1-indexing on its rows.</p>
+<h4 id="live"><code>live()</code></h4>
+<p>Turn a regular query into one for the live API.</p>
+<h4 id="monthlyvargs-kwargs"><code>monthly(*vargs, **kwargs)</code></h4>
+<h4 id="nextvargs-kwargs"><code>next(*vargs, **kwargs)</code></h4>
+<h4 id="rangevargs-kwargs"><code>range(*vargs, **kwargs)</code></h4>
+<h4 id="segmentvargs-kwargs"><code>segment(*vargs, **kwargs)</code></h4>
+<p>E.g. query.segment(account.segments['browser']) query.segment('browser') query.segment(account.segments['browser'].any('Chrome', 'Firefox')) You can also use the <code>any</code>, <code>all</code>, <code>followed_by</code> and <code>immediately_followed_by</code> functions in this module to chain together segments. (Experimental.)</p>
+<h4 id="setvargs-kwargs"><code>set(*vargs, **kwargs)</code></h4>
+<p><code>set</code> is a way to add raw properties to the request, for features that python-google-analytics does not support or supports incompletely. For convenience's sake, it will serialize Column objects but will leave any other kind of value alone.</p>
+<h4 id="sortvargs-kwargs"><code>sort(*vargs, **kwargs)</code></h4>
+<h4 id="specifyvargs-kwargs"><code>specify(*vargs, **kwargs)</code></h4>
+<h4 id="stepvargs-kwargs"><code>step(*vargs, **kwargs)</code></h4>
+<p>Specify a maximum amount of results to be returned in any one request, without implying that we should stop fetching beyond that limit. Useful in debugging pagination functionality, perhaps also when you want to be able to decide whether to continue fetching data, based on the data you've already received.</p>
+<h4 id="weeklyvargs-kwargs"><code>weekly(*vargs, **kwargs)</code></h4>
+<h4 id="yearlyvargs-kwargs"><code>yearly(*vargs, **kwargs)</code></h4>
+<h3 id="class-query"><code>class Query()</code></h3>
+<h4 id="init__profile-metrics-dimensions-meta"><code>__init__(profile, metrics={}, dimensions=[], meta=[])</code></h4>
+<h4 id="clone-1"><code>clone()</code></h4>
+<h4 id="filtervargs-kwargs-1"><code>filter(*vargs, **kwargs)</code></h4>
+<p>Most of the actual functionality lives on the Column object and the <code>all</code> and <code>any</code> functions.</p>
+<h4 id="setvargs-kwargs-1"><code>set(*vargs, **kwargs)</code></h4>
+<p><code>set</code> is a way to add raw properties to the request, for features that python-google-analytics does not support or supports incompletely. For convenience's sake, it will serialize Column objects but will leave any other kind of value alone.</p>
+<h4 id="sortvargs-kwargs-1"><code>sort(*vargs, **kwargs)</code></h4>
+<h4 id="specifyvargs-kwargs-1"><code>specify(*vargs, **kwargs)</code></h4>
+<h3 id="class-realtimequery"><code>class RealTimeQuery()</code></h3>
+<h4 id="init__profile-metrics-dimensions-meta-1"><code>__init__(profile, metrics={}, dimensions=[], meta=[])</code></h4>
+<h4 id="clone-2"><code>clone()</code></h4>
+<h4 id="filtervargs-kwargs-2"><code>filter(*vargs, **kwargs)</code></h4>
+<p>Most of the actual functionality lives on the Column object and the <code>all</code> and <code>any</code> functions.</p>
+<h4 id="setvargs-kwargs-2"><code>set(*vargs, **kwargs)</code></h4>
+<p><code>set</code> is a way to add raw properties to the request, for features that python-google-analytics does not support or supports incompletely. For convenience's sake, it will serialize Column objects but will leave any other kind of value alone.</p>
+<h4 id="sortvargs-kwargs-2"><code>sort(*vargs, **kwargs)</code></h4>
+<h4 id="specifyvargs-kwargs-2"><code>specify(*vargs, **kwargs)</code></h4>
+<h3 id="class-report"><code>class Report()</code></h3>
+<h4 id="init__raw-query"><code>__init__(raw, query)</code></h4>
+<h4 id="appendraw-query"><code>append(raw, query)</code></h4>
+<h3 id="function-allvalues"><code>function all(*values)</code></h3>
+<h3 id="function-anyvalues"><code>function any(*values)</code></h3>
+<h3 id="function-conditionvalue"><code>function condition(value)</code></h3>
+<h3 id="function-copyx"><code>function copy(x)</code></h3>
+<p>Shallow copy operation on arbitrary Python objects. See the module's <strong>doc</strong> string for more info.</p>
+<h3 id="function-followed_byvalues"><code>function followed_by(*values)</code></h3>
+<h3 id="function-immediately_followed_byvalues"><code>function immediately_followed_by(*values)</code></h3>
+<h3 id="function-sequencevalue"><code>function sequence(value)</code></h3>
