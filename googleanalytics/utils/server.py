@@ -1,8 +1,4 @@
-from copy import copy
-from googleanalytics import oauth
-
-
-def single_serve(message, port=5000):
+def single_serve(message=None, port=5000):
     import logging
     from flask import Flask, Response, request
 
@@ -17,7 +13,8 @@ def single_serve(message, port=5000):
     def main():
         request.environ.get('werkzeug.server.shutdown')()
         captured.update(dict(request.args.items()))
-        print message
+        if message:
+            print message
         return Response(message, mimetype='text/plain')
 
     app.run(port=port)

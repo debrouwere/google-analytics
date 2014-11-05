@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 import flask
 from functional import memoize, immutable, noop, soak
 from server import single_serve
+import keyring
 
 def date(obj):
     if obj is None:
