@@ -1,7 +1,6 @@
 import googleanalytics as ga
 import unittest
 import datetime
-from secrets import client
 
 
 class TestAuthentication(unittest.TestCase):

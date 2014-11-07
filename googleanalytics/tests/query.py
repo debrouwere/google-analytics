@@ -1,13 +1,11 @@
 import googleanalytics as ga
 import unittest
 import datetime
-from secrets import client
 
 
 class TestQueryingBase(unittest.TestCase):
     def setUp(self):
-        domain = 'pyga-unittest'
-        accounts = ga.utils.keyring.ask_and_authenticate(domain, **client)
+        accounts = ga.utils.keyring.ask_and_authenticate('pyga-unittest')
         if not len(accounts):
             raise Exception("Cannot proceed with unit testing: \
                 the authorized Google account does not use Google Analytics.")
