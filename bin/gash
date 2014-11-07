@@ -40,7 +40,14 @@ def auth_command(arguments):
         identifiers = arguments
 
     identification = normalize_identification(identifiers)
-    return ga.utils.keyring.ask_and_authenticate(**identification)
+
+    tokens = ga.utils.keyring.ask(**identification)
+    accounts = ga.oauth.authenticate(**tokens)
+
+    if arguments.show: 
+        print json.dumps(tokens, indent=4)
+
+    return accounts
 
 
 def revoke_command(arguments):
@@ -90,6 +97,7 @@ auth = subparsers.add_parser('auth')
 auth.set_defaults(func=auth_command, 
     help="authenticate with Google Analytics")
 auth.add_argument('identifiers', nargs='*')
+auth.add_argument('-s', '--show', action='store_true')
 
 revoke = subparsers.add_parser('revoke')
 revoke.add_argument('name', default='', nargs='?')
