@@ -1,0 +1,23 @@
+client: fusion
+
+scope:
+    account: '46206777'
+    webproperty: 'UA-46206777-1'
+    profile: '91273218'
+
+defaults:
+    range:
+        start: '2014-11-01'
+        days: 7
+
+queries:
+    Totals by device category:
+        metrics:
+            - pageviews
+            - unique pageviews
+            - users
+            - sessions
+        dimensions:
+            - device category
+        sort:
+            - -pageviews
