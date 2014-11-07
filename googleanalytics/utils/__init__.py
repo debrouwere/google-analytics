@@ -8,6 +8,14 @@ from functional import memoize, immutable, noop, soak
 from server import single_serve
 import keyring
 
+
+def simplify(value):
+    if isinstance(value, datetime.datetime):
+        return value.isoformat()
+    else:
+        return value
+
+
 def date(obj):
     if obj is None:
         return None

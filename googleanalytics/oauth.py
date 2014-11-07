@@ -60,7 +60,7 @@ def normalize_client_secrets(client_id, client_secret, prefix='', suffix=''):
 
 
 # a simplified version of `oauth2client.tools.run_flow`
-def ask(client_id, client_secret=None, access_token=None, refresh_token=None, port=5000, prefix='', suffix=''):
+def ask(client_id=None, client_secret=None, access_token=None, refresh_token=None, port=5000, prefix='', suffix='', name=None):
     if access_token or refresh_token:
         return {
             'client_id': client_id, 

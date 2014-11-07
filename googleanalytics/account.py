@@ -35,7 +35,7 @@ class Account(object):
         _columns = [Column(item, self) for item in items]
         _filtered_columns = filter(is_included, _columns)
         return addressable.List(_filtered_columns, 
-            indices=['id', 'slug', 'name'], unique=is_unique)
+            indices=['id', 'slug', 'name'], unique=is_unique, insensitive=True)
 
     @property
     @utils.memoize
@@ -52,7 +52,7 @@ class Account(object):
     def segments(self):
         raw_segments = self.service.management().segments().list().execute()['items']
         return addressable.List([Segment(raw, self) for raw in raw_segments], 
-            indices=['id', 'name'])
+            indices=['id', 'name'], insensitive=True)
 
     @property
     @utils.memoize

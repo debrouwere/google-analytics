@@ -1,1 +1,2 @@
-import utils, account, columns, errors, oauth, query
+import utils, account, auth, blueprint, columns, errors, oauth, query
+from auth import authenticate

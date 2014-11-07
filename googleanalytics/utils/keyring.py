@@ -3,7 +3,6 @@ import json
 import keyring
 import googleanalytics as ga
 
-
 DOMAIN = 'Google Analytics API'
 
 def get(name):
@@ -20,18 +19,20 @@ def delete(name):
 def set(name, secrets):
     keyring.set_password(DOMAIN, name, json.dumps(secrets))
 
-def ask(name, client_id, client_secret):
+def ask(name, client_id=None, client_secret=None):
     secrets = get(name)
     if secrets:
         return secrets
-    else:
+    elif client_id and client_secret:
         suffix = name.upper()
         tokens = ga.oauth.ask(client_id, client_secret, suffix=suffix)
         set(name, tokens)
         return tokens
+    else:
+        raise Exception()
 
 # analogous to `googleanalytics.oauth.ask_and_authenticate`
-def ask_and_authenticate(name, client_id, client_secret):
+def ask_and_authenticate(name, client_id=None, client_secret=None):
     tokens = ask(name, client_id, client_secret)
     return ga.oauth.authenticate(**tokens)
 

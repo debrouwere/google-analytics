@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 import collections
 import addressable
 import utils
@@ -40,6 +40,15 @@ class Report(object):
         self.total = raw['totalsForAllResults'].values()[0]
         # print self.totals
 
+    def serialize(self):
+        serialized = []
+        for row in self.rows:
+            row = row._asdict()
+            for key, value in row.items():
+                row[key] = utils.simplify(value)
+            serialized.append(row)
+        return serialized
+
     def __getitem__(self, key):
         try:
             i = self.headers.index(key)
@@ -74,7 +83,8 @@ def immediately_followed_by(*values):
 
 
 class Query(object):
-    def __init__(self, profile, metrics=[], dimensions=[], meta={}):
+    def __init__(self, profile, metrics=[], dimensions=[], meta={}, title=None):
+        self._title = title
         self.raw = {'ids': 'ga:' + profile.id}
         self.meta = {}
         self.meta.update(meta)
@@ -102,7 +112,7 @@ class Query(object):
         return self._normalize_column(value).id
 
     def _serialize_columns(self, values):
-        if not isinstance(values, list):
+        if not isinstance(values, (list, tuple)):
             values = [values]
 
         return [self._serialize_column(value) for value in values]
@@ -126,7 +136,7 @@ class Query(object):
 
     def clone(self):
         query = self.__class__(profile=self.profile, meta=self.meta)
-        query.raw = copy(self.raw)
+        query.raw = deepcopy(self.raw)
         return query
 
     @utils.immutable
@@ -159,9 +169,37 @@ class Query(object):
 
         return self
 
+    @property
+    def description(self):
+        metrics = self.raw['metrics']
+        head = metrics[:-1]
+        tail = metrics[-1]
+
+        text = ", ".join(head)
+        if len(metrics) > 1:
+            text = text + " and " + tail
+
+        return text
+
+    @property
+    def title(self):
+        return self._title or self.description
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+
     @utils.immutable
-    def specify(self, *vargs, **kwargs):
+    def query(self, *vargs, **kwargs):
         return self._specify(*vargs, **kwargs)
+
+    @utils.immutable
+    def metrics(self, *metrics):
+        return self._specify(metrics=metrics)
+
+    @utils.immutable
+    def dimensions(self, *dimensions):
+        return self._specify(dimensions=dimensions)
 
     @utils.immutable
     def sort(self, *columns):
@@ -332,7 +370,7 @@ class CoreQuery(Query):
         return self
 
     def _execute(self):
-        raw = copy(self.raw)
+        raw = deepcopy(self.raw)
         raw['metrics'] = ','.join(self.raw['metrics'])
         raw['dimensions'] = ','.join(self.raw['dimensions'])
 
@@ -362,7 +400,7 @@ class CoreQuery(Query):
         return report
 
     def __repr__(self):
-        return "<Query: {}>".format(self.profile.name)
+        return "<Query: {} ({})>".format(self.title, self.profile.name)
 
 
 class RealTimeQuery(Query):
