@@ -119,11 +119,11 @@ Here's the basic list of methods:
         .sort
         .filter
         .range
-        .hours
-        .days
-        .weeks
-        .months
-        .years
+        .hourly
+        .daily
+        .weekly
+        .monthly
+        .yearly
         .limit
         .segment
 
@@ -178,6 +178,11 @@ CLI
 ``python-google-analytics`` comes with a small command-line interface
 through the ``gash`` command. Use ``--help`` to find out more about how
 it works.
+
+**Warning:** the command-line interface is currently being refactored on
+master and might not work at all. Use the latest version that's
+available through ``pip`` and PyPI if you'd like to try out the CLI, not
+the one on GitHub.
 
 The command-line interface currently comes with three subcommands:
 
