@@ -124,6 +124,8 @@ Finally, if you'd like to just use the simplified oAuth functionality in python-
 
 `python-google-analytics` comes with a small command-line interface through the `gash` command. Use `--help` to find out more about how it works.
 
+**Warning:** the command-line interface is currently being refactored on master and might not work at all. Use version 0.5 or earlier if you'd like to try out the CLI.
+
 The command-line interface currently comes with three subcommands: 
 
 * `auth`: get a Google Analytics OAuth token, given a client id and secret (provided as arguments, or procured from the environment)

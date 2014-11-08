@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 import googleanalytics as ga
+from googleanalytics import commands
 
 
 def normalize_identification(identification):
@@ -41,8 +42,8 @@ def auth_command(arguments):
 
     identification = normalize_identification(identifiers)
 
-    tokens = ga.utils.keyring.ask(**identification)
-    accounts = ga.oauth.authenticate(**tokens)
+    tokens = ga.auth.authorize(**identification)
+    accounts = ga.auth.authenticate(**tokens)
 
     if arguments.show: 
         print json.dumps(tokens, indent=4)
@@ -62,32 +63,9 @@ def ls_command(arguments):
     while len(identifiers) < 5:
         identifiers.append(None)
 
-    name, account, webproperty, profile, pattern = identifiers
-    tokens = ga.utils.keyring.get(name) or auth_command([name])
-    accounts = ga.oauth.ask_and_authenticate(**tokens)
-
-    def print_list(l):
-        for item in l:
-            print item
-
-    def match(column):
-        return re.search(pattern, column.name, re.IGNORECASE)
-
-    if pattern:
-        columns = accounts[account].columns
-        filtered_columns = filter(match, columns)
-        print_list(filtered_columns)
-    elif profile:
-        columns = accounts[account].columns
-        print_list(columns)
-    elif webproperty:
-        profiles = accounts[account].webproperties[webproperty].profiles
-        print_list(profiles)
-    elif account:
-        webproperties = accounts[account].webproperties
-        print_list(webproperties)
-    else:
-        print_list(accounts)
+    name = identifiers[0]
+    tokens = ga.auth.keyring.get(name) or auth_command([name])
+    commands.list(tokens, *identifiers)
 
 
 arguments = argparse.ArgumentParser()
