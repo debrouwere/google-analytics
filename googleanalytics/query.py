@@ -1,6 +1,7 @@
 from copy import deepcopy
 import collections
 import addressable
+import inspector
 import utils
 import account
 import columns
@@ -189,6 +190,7 @@ class Query(object):
     def title(self, value):
         self._title = value
 
+    @inspector.implements(_specify)
     @utils.immutable
     def query(self, *vargs, **kwargs):
         return self._specify(*vargs, **kwargs)
@@ -280,22 +282,27 @@ class CoreQuery(Query):
 
         return self
 
+    @inspector.implements(range)
     def hourly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'hour'
         return self.range(*vargs, **kwargs)
 
+    @inspector.implements(range)
     def daily(self, *vargs, **kwargs):
         kwargs['granularity'] = 'day'
         return self.range(*vargs, **kwargs)
 
+    @inspector.implements(range)
     def weekly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'week'
         return self.range(*vargs, **kwargs)
 
+    @inspector.implements(range)
     def monthly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'month'
         return self.range(*vargs, **kwargs)
 
+    @inspector.implements(range)
     def yearly(self, *vargs, **kwargs):
         kwargs['granularity'] = 'year'
         return self.range(*vargs, **kwargs)

@@ -1,4 +1,4 @@
-import functools
+import inspector
 
 class memoize:
   def __init__(self, function):
@@ -14,7 +14,7 @@ class memoize:
 
 
 def immutable(method):
-    @functools.wraps(method)
+    @inspector.wraps(method)
     def wrapped_method(self, *vargs, **kwargs):
         obj = self.clone()
         method(obj, *vargs, **kwargs)
