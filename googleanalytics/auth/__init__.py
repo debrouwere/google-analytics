@@ -41,7 +41,7 @@ def authenticate(client_id=None, client_secret=None,
     # TODO: seeing as we're using this for both `authenticate`
     # and `authorize`, perhaps turn this first part into 
     # a decorator
-    if (access_token or refresh_token):
+    if client_id and client_secret and (access_token or refresh_token):
         creds = dict(
             client_id=client_id, 
             client_secret=client_secret, 
@@ -49,6 +49,11 @@ def authenticate(client_id=None, client_secret=None,
             refresh_token=refresh_token, 
             )
     else:
+        # it is possible for some but not all credentials 
+        # to be present, e.g. a client id and client secret
+        # from environment variables, but there's no token yet; 
+        # if that's the case, we go through an authorization
+        # procedure to grab a token
         creds = credentials.find(
             valid=True, 
             interactive=interactive, 

@@ -22,14 +22,17 @@ def refine_query(query, description):
             
     return query
 
-def authenticate(blueprint):
+def authenticate(blueprint, **kwargs):
     client = blueprint['client']
     scope = blueprint['scope']
-    
+    options = scope
+    options.update(kwargs)
+
     if isinstance(client, basestring):
-        profile = ga.authenticate(name=blueprint['client'], **scope)
+        profile = ga.authenticate(identity=blueprint['client'], **options)
     elif isinstance(client, dict):
-        profile = ga.authenticate(client=client, **scope)
+        options.update(client)
+        profile = ga.authenticate(**options)
     else:
         raise ValueError("Could not find credentials.")
     
