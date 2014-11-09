@@ -1,3 +1,2 @@
-from list import list
-from authenticate import authenticate
-from revoke import revoke
+import authorize, common, list, query
+from common import cli

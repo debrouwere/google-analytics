@@ -1,28 +1,43 @@
 import re
+import click
 import googleanalytics as ga
+from common import authenticated, cli
+
 
 def print_list(l):
     for item in l:
-        print item
+        click.echo(item)
 
-def match(column):
-    return re.search(pattern, column.name, re.IGNORECASE)
 
-def list(credentials, name=None, account=None, webproperty=None, profile=None, pattern=None):
-    accounts = ga.auth.oauth.ask_and_authenticate(**credentials)
+@cli.command()
+@click.argument('account', required=False)
+@click.argument('webproperty', required=False)
+@authenticated
+def properties(identity, accounts, account=None, webproperty=None):
+    scope = ga.auth.navigate(accounts, account, webproperty)
+
+    if webproperty:
+        print_list(scope.profiles)
+    elif account:
+        print_list(scope.webproperties)
+    else:
+        print_list(scope)
+
+
+def matcher(pattern):
+    def match(column):
+        return re.search(pattern, column.name, re.IGNORECASE)
+    return match
+
+@cli.command()
+@click.argument('account')
+@click.argument('pattern', required=False)
+@authenticated
+def columns(identity, accounts, account, pattern=None, column_type='columns'):
+    account = accounts[account]
+    columns = getattr(account, column_type)
 
     if pattern:
-        columns = accounts[account].columns
-        filtered_columns = filter(match, columns)
-        print_list(filtered_columns)
-    elif profile:
-        columns = accounts[account].columns
-        print_list(columns)
-    elif webproperty:
-        profiles = accounts[account].webproperties[webproperty].profiles
-        print_list(profiles)
-    elif account:
-        webproperties = accounts[account].webproperties
-        print_list(webproperties)
-    else:
-        print_list(accounts)
+        columns = filter(matcher(pattern), columns)
+    
+    print_list(columns)

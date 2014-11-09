@@ -1,4 +1,7 @@
 import googleanalytics as ga
+from common import authenticated, cli
 
-def revoke():
-    pass
+@cli.command()
+@authenticated
+def revoke(identity, accounts):
+    ga.revoke(identity)

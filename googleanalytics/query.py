@@ -174,17 +174,16 @@ class Query(object):
     def description(self):
         metrics = self.raw['metrics']
         head = metrics[:-1]
-        tail = metrics[-1]
-
         text = ", ".join(head)
         if len(metrics) > 1:
+            tail = metrics[-1]
             text = text + " and " + tail
 
         return text
 
     @property
     def title(self):
-        return self._title or self.description
+        return self._title or self.description or 'n/a'
 
     @title.setter
     def title(self, value):
@@ -413,3 +412,42 @@ class CoreQuery(Query):
 class RealTimeQuery(Query):
     pass
     # https://developers.google.com/analytics/devguides/reporting/realtime/v3/reference/data/realtime#resource
+
+
+def refine(query, description):
+    """
+    Refine a query by describing it as a series of actions 
+    and parameters to those actions. These map directly 
+    to Query methods and arguments to those methods.
+
+    This is an alternative to the chaining interface.
+    Mostly useful if you'd like to put your queries
+    in a file, rather than in Python code.
+    """
+
+    for attribute, arguments in description.items():
+        if hasattr(query, attribute):
+            attribute = getattr(query, attribute)
+        else:
+            raise ValueError("Unknown query method: " + attribute)
+
+        if callable(attribute):
+            method = attribute
+            if isinstance(arguments, dict):
+                query = method(**arguments)
+            elif isinstance(arguments, list):
+                query = method(*arguments)
+            else:
+                query = method(arguments)
+        else:
+            setattr(attribute, arguments)
+            
+    return query
+
+def describe(profile, description):
+    """
+    Generate a query from a description of it. 
+    See `refine` for more information.
+    """
+    return refine(profile.query(), description)
+

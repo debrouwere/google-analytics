@@ -33,6 +33,12 @@ def navigate(accounts, account=None, webproperty=None, profile=None):
 
     return scope
 
+def find(**kwargs):
+    return oauth.Credentials.find(**kwargs)
+
+def identity(name):
+    return find(identity=name)
+
 def authenticate(client_id=None, client_secret=None, 
     access_token=None, refresh_token=None, 
     account=None, webproperty=None, profile=None, 

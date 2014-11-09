@@ -2,50 +2,32 @@ from copy import copy
 import googleanalytics as ga
 
 
-def refine_query(query, description):
-    for attribute, arguments in description.items():
-        if hasattr(query, attribute):
-            attribute = getattr(query, attribute)
-        else:
-            raise ValueError("Unknown query method: " + method)
+class Blueprint(object):
+    def __init__(self, description):
+        self.raw = description
+        self.scope = description.get('scope')
+        self.defaults = description.get('defaults')
+        self._identity = description.get('identity')
+        self._queries = description.get('queries')
 
-        if callable(attribute):
-            method = attribute
-            if isinstance(arguments, dict):
-                query = method(**arguments)
-            elif isinstance(arguments, list):
-                query = method(*arguments)
-            else:
-                query = method(arguments)
-        else:
-            setattr(attribute, arguments)
-            
-    return query
+    @property
+    def identity(self):
+        data = self._identity
+        if data:
+            if isinstance(data, basestring):
+                return dict(identity=data)
+            elif isinstance(data, dict):
+                return data
+                
+        return None
 
-def authenticate(blueprint, **kwargs):
-    client = blueprint['client']
-    scope = blueprint['scope']
-    options = scope
-    options.update(kwargs)
+    def queries(self, profile):
+        base = ga.query.describe(profile, self.defaults)
 
-    if isinstance(client, basestring):
-        profile = ga.authenticate(identity=blueprint['client'], **options)
-    elif isinstance(client, dict):
-        options.update(client)
-        profile = ga.authenticate(**options)
-    else:
-        raise ValueError("Could not find credentials.")
-    
-    return profile
+        queries = []
+        for title, description in self._queries.items():
+            query = ga.query.refine(base, description)
+            query.title = title
+            queries.append(query)
 
-def parse(blueprint, profile):
-    base = refine_query(profile.query(), blueprint['defaults'])
-
-    queries = []
-    for title, description in blueprint['queries'].items():
-        query = refine_query(base, description)
-        query.title = title
-        queries.append(query)
-
-    return queries
-
+        return queries
