@@ -4,59 +4,35 @@ import os
 import argparse
 import json
 import re
+import inspector
 import googleanalytics as ga
 from googleanalytics import commands
 
 
-def normalize_identification(identification):
-    client_secret = False
-    name = ''
-
-    if len(identification) == 3:
-        name, client_id, client_secret = identification
-    elif len(identification) == 2:
-        client_id, client_secret = identification
-        name = client_id
-    elif len(identification) == 1:
-        client_id = os.environ
-        name = identification[0]
-    elif len(identification) == 0:
-        if 'GOOGLE_ANALYTICS_CLIENT_ID' in os.environ \
-            and 'GOOGLE_ANALYTICS_CLIENT_SECRET' in os.environ:
-                client_id = os.environ
+def authenticated(fn):
+    @inspector.wraps(fn)
+    def authenticated_fn(arguments):
+        if hasattr(arguments, 'identity'):
+            identity = arguments.identity
         else:
-            name = raw_input('Human-readable account name: ')
-            client_id = raw_input('Client ID: ')
-            client_secret = raw_input('Client secret: ')
-    else:
-        raise ValueError()
-
-    return dict(name=name, client_id=client_id, client_secret=client_secret)
+            identity = None
+        accounts = ga.authenticate(identity=identity, interactive=True, save=True)
+        return fn(arguments, accounts)
+    return authenticated_fn
 
 
-def auth_command(arguments):
-    if hasattr(arguments, 'identifiers'):
-        identifiers = arguments.identifiers
-    else:
-        identifiers = arguments
-
-    identification = normalize_identification(identifiers)
-
-    tokens = ga.auth.authorize(**identification)
-    accounts = ga.auth.authenticate(**tokens)
-
+@authenticated
+def auth_command(arguments, accounts):
     if arguments.show: 
-        print json.dumps(tokens, indent=4)
-
+        print json.dumps(credentials.serialize(), indent=4)
     return accounts
 
+def revoke_command(arguments, accounts):
+    ga.revoke(arguments.identity)
 
-def revoke_command(arguments):
-    return ga.utils.keyring.revoke(arguments.name)
-
-
+@authenticated
 def ls_command(arguments):
-    """ analytics ls <name> <acc> <prop> <profile> <columnsearch> """
+    """ analytics ls <identity> <acc> <prop> <profile> <columnsearch> """
 
     identifiers = arguments.identifiers
 
@@ -71,10 +47,10 @@ def ls_command(arguments):
 arguments = argparse.ArgumentParser()
 subparsers = arguments.add_subparsers()
 
-auth = subparsers.add_parser('auth')
+auth = subparsers.add_parser('authorize')
 auth.set_defaults(func=auth_command, 
-    help="authenticate with Google Analytics")
-auth.add_argument('identifiers', nargs='*')
+    help="authorize the CLI to access to Google Analytics")
+auth.add_argument('identity')
 auth.add_argument('-s', '--show', action='store_true')
 
 revoke = subparsers.add_parser('revoke')

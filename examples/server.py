@@ -4,7 +4,7 @@ import googleanalytics
 
 app = Flask(__name__)
 
-flow = googleanalytics.oauth.Flow(
+flow = googleanalytics.auth.Flow(
     os.environ['GOOGLE_ANALYTICS_CLIENT_ID'], 
     os.environ['GOOGLE_ANALYTICS_CLIENT_SECRET'], 
     redirect_uri='http://localhost:5000/auth/google/callback')
@@ -17,6 +17,6 @@ def authorization():
 @app.route('/auth/google/callback')
 def callback():
     credentials = flow.step2_exchange(request.args['code'])
-    return jsonify(**credentials)
+    return jsonify(**credentials.serialize())
 
 app.run()
