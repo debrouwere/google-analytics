@@ -75,7 +75,9 @@ class WebProperty(object):
         self.raw = raw
         self.id = raw['id']
         self.name = raw['name']
-        self.url = raw['websiteUrl']
+        # on rare occassions, e.g. for abandoned web properties, 
+        # a website url might not be present
+        self.url = raw.get('websiteUrl')
 
     @property
     @utils.memoize
