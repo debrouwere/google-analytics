@@ -54,7 +54,7 @@ print report['pageviews']
 
 If you didn't add the client secrets to your environment variables, you can also just pass them directly from your code, though it's not always the safest option:
 
-```
+```python
 import googleanalytics as ga
 client = dict(
     client_id='myproj.apps.googleusercontent.com', 
