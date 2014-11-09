@@ -1,14 +1,25 @@
-``python-google-analytics`` provides a light wrapper on top of Google's
-own Google Analytics API client for Python. It also includes a
-minimalistic command-line interface to explore your account.
+``google-analytics`` takes the pain out of working with the Google
+Analytics API. It is written in Python but there's also a command-line
+interface.
+
+(The goal is for the command-line interface to have feature parity with
+the Python interface. We're working on it.)
+
+It is built on top of `Google's own API client for
+Python <https://developers.google.com/api-client-library/python/start/installation>`__.
 
 -  **Authentication.** OAuth2 is a bit of a pain and we've made it
-   easier.
+   easier, both for interactive use and for `server
+   applications <https://github.com/debrouwere/google-analytics/blob/master/examples/server.py>`__.
+   We'll also save your credentials in the operating system's keychain.
 -  **Querying.** Easier to query per week, month or year. Query using
    metric IDs or using their full names, whichever you think is nicer.
    Work with both the Core and the Live APIs.
--  **Reporting.** Iterate through the entire report or
-   column-per-column.
+-  **Reporting.** Generate reports from the command-line. Optionally
+   describe reports and queries in `easy-to-read and easy-to-write YAML
+   files <https://github.com/debrouwere/google-analytics/blob/master/examples/query.yml>`__.
+   Reports in Python work better too: iterate through the entire report
+   or column-per-column.
 -  **Exploration.** Traverse the account hierarchy from account to
    webproperty to profile to dimensions, both programmatically and with
    the included command-line interface.
@@ -24,25 +35,54 @@ few steps to get started.
    project. This registers your application with Google.
 2. Click on your project, go to ``APIs & auth`` and then
    ``Credentials``.
-3. Find your Client ID and Client secret. Optionally, add these to your
-   environment variables, e.g. by adding
+3. Find your Client ID and Client secret or generate new ones. (If you
+   need to generate new credentials, ask for offline use.) Optionally,
+   add these credentials to your environment variables, e.g. by adding
    ``export GOOGLE_ANALYTICS_CLIENT_ID=...`` (and so on) to your
-   ``~/.bashrc``
+   ``~/.zshrc`` or ``~/.bashrc``
 
-Now we're ready to authenticate. If you've put the client secrets in the
-environment, you can use these environment variables to authenticate:
+Now we're ready to authorize and authenticate.
 
-::
+On the command-line, type:
 
-    import os
+.. code:: shell
+
+    googleanalytics authorize --identity myproject
+
+``google-analytics`` will look through your environment variables and
+your operating system's keychain for existing credentials. If nothing's
+there, you will be prompted for a client id and client secret, and then
+asked to authorize the command-line interface to access to your
+analytics data.
+
+Alternatively, in Python:
+
+.. code:: python
+
     import googleanalytics as ga
-    accounts = ga.oauth.ask_and_authenticate(os.environ)
+    accounts = ga.authenticate()
 
 ``accounts`` is a list of user accounts that your credentials have given
 you access to.
 
+If you already know which account, web property and profile you'd like
+to access, you can tell ``ga.authenticate`` to return the correct
+profile rather than a list of all accounts:
+
+.. code:: python
+
+    import googleanalytics as ga
+    profile = ga.authenticate(
+        account='debrouwere.org', 
+        webproperty='http://debrouwere.org', 
+        profile='debrouwere.org'
+        )
+    report = profile.query('pageviews').range('2014-10-01', '2014-10-31').execute()
+    print report['pageviews']
+
 If you didn't add the client secrets to your environment variables, you
-can also just pass them directly from your code:
+can also just pass them directly from your code, though it's not always
+the safest option:
 
 ::
 
@@ -51,51 +91,49 @@ can also just pass them directly from your code:
         client_id='myproj.apps.googleusercontent.com', 
         client_secret='mysecret'
     )
-    accounts = ga.oauth.ask_and_authenticate(**client)
+    accounts = ga.authenticate(**client)
 
 Storing credentials
 ~~~~~~~~~~~~~~~~~~~
 
 If you'd like to store the OAuth2 tokens so you don't have to ask for
-permission every time you run your code, you can first request tokens
-and only later use them to authenticate, allowing you to save those
-tokens for later use. Here's one way that could work:
+permission every time you run your code, you absolutely can. On the
+command-line, this is the default behavior: once authenticated, we save
+your credentials. In Python, pass ``save=True`` and
+``interactive=True``:
 
-::
+.. code:: python
 
     import googleanalytics as ga
-    client = dict(
-        client_id='myproj.apps.googleusercontent.com', 
-        client_secret='mysecret'
-    )
+    accounts = ga.authenticate(save=True, interactive=True)
 
-    if os.path.exists('tokens.json'):
-        tokens = json.load(open('tokens.json'))
+If you'd prefer saving ``client_id``, ``client_secret`` and
+``refresh_token`` somewhere yourself, that's possible too:
+
+.. code:: python
+
+    import os
+    import json
+    import googleanalytics as ga
+    if os.exists('credentials.json'):
+        credentials = json.parse(open('credentials.json'))
     else:
-        tokens = ga.oauth.ask(**client)
-        json.dump(tokens, open('tokens.json', 'w'), indent=4)
+        # authorize your code to access the Google Analytics API
+        # (this will be interactive, as you'll need to confirm
+        # in a browser window)
+        credentials = ga.authorize()
+        # turn the credentials object into a plain dictionary
+        credentials = credentials.serialize()
+        json.dump(credentials, open('credentials.json', 'w'))
 
-    accounts = ga.oauth.authenticate(**tokens)
-
-As a convenience, we've also made it easy to store your credentials in
-your operating system's keychain.
-
-::
-
-    import googleanalytics as ga
-    client = dict(
-        client_id='myproj.apps.googleusercontent.com', 
-        client_secret='mysecret'
-    )
-
-    accounts = ga.utils.keyring.ask_and_authenticate('my-app', **client)
+    ga.authenticate(**credentials)
 
 Querying
 --------
 
 The querying interface looks like this.
 
-::
+.. code:: python
 
     account = accounts[0]
     webproperty = account.webproperties[0]
@@ -140,7 +178,7 @@ pass keyword arguments. These will then be added to the raw query. You
 can always check what the raw query is going to be with the build method
 on queries.
 
-::
+.. code:: python
 
     query = profile.query() \
         .set(metrics=['ga:pageviews']) \
@@ -151,7 +189,7 @@ on queries.
 Secondly, don't forget that you can access the raw query as well as raw
 report data in ``query.raw`` and ``report.raw`` respectively.
 
-::
+.. code:: python
 
     from pprint import pprint
     pprint(query.raw)
@@ -159,12 +197,14 @@ report data in ``query.raw`` and ``report.raw`` respectively.
     pprint(report.raw)
 
 Finally, if you'd like to just use the simplified oAuth functionality in
-python-google-analytics, that's possible too.
+python-google-analytics, that's possible too, using Google's ``service``
+interface on the ``Account`` object.
 
-::
+.. code:: python
 
-    accounts = ga.oauth.authenticate(**tokens)
+    accounts = ga.authenticate()
     raw_query = {
+        'ids': 'ga:26206906', 
         'metrics': ['ga:pageviews'], 
         'dimensions': ['ga:yearMonth'], 
         'start_date': '2014-07-01', 
@@ -175,22 +215,19 @@ python-google-analytics, that's possible too.
 CLI
 ---
 
-``python-google-analytics`` comes with a small command-line interface
-through the ``gash`` command. Use ``--help`` to find out more about how
+``python-google-analytics`` comes with a command-line interface: the
+``googleanalytics`` command. Use ``--help`` to find out more about how
 it works.
 
-**Warning:** the command-line interface is currently being refactored on
-master and might not work at all. Use the latest version that's
-available through ``pip`` and PyPI if you'd like to try out the CLI, not
-the one on GitHub.
+The command-line interface currently comes with four subcommands:
 
-The command-line interface currently comes with three subcommands:
-
--  ``auth``: get a Google Analytics OAuth token, given a client id and
-   secret (provided as arguments, or procured from the environment)
+-  ``authorize``: get a Google Analytics OAuth token, given a client id
+   and secret (provided as arguments, or procured from the environment)
 -  ``revoke``: revoke existing authentication, useful for debugging or
    when your existing tokens for some reason don't work anymore
--  ``ls``: explore your account
+-  ``properties``: explore your account
+-  ``columns``: see what metrics, dimensions, segments et cetera are
+   present
 
 auth
 ----
@@ -200,48 +237,53 @@ commandline, optionally prefaced with a short and more easily-remembered
 name for this client.
 
 If no ``client_id`` and ``client_secret`` are specified, these will be
-fetched from your environment variables, by default these are in
-``GOOGLE_ANALYTICS_CLIENT_ID`` and ``GOOGLE_ANALYTICS_CLIENT_SECRET``
-but you may specify a suffix as the first argument to this command.
+fetched from your environment variables or you will be prompted to enter
+them.
 
-::
+.. code:: shell
 
-    # look in environment variables
-    gash auth
+    # look in environment variables, or prompt the user
+    googleanalytics authorize
 
-    # look in `GOOGLE_ANALYTICS_CLIENT_ID_B` 
-    # and `GOOGLE_ANALYTICS_CLIENT_SECRET_B`
-    # environment variables
-    gash auth b
+    # look in `GOOGLE_ANALYTICS_CLIENT_ID_DEBROUWERE` 
+    # and `GOOGLE_ANALYTICS_CLIENT_SECRET_DEBROUWERE`
+    # environment variables, and save credentials 
+    # under `debrouwere` in the keychain
+    googleanalytics authorize debrouwere
 
     # specify client information on the command line
-    gash auth myid mysecret
-
-    # optionally specify a more readable client name 
-    # for later reference
-    gash auth mynick myid mysecret
+    gash authorize debrouwere myid mysecret
 
 revoke
 ------
 
-::
+Revoke access to your account. You'll have to ``authorize`` again before
+``google-analytics`` will be able to work with your data.
 
-    gash revoke <name>
+.. code:: shell
 
-ls
---
+    googleanalytics revoke debrouwere
 
-::
+properties
+----------
+
+.. code:: shell
 
     # show all of your accounts
-    gash ls myproj
+    googleanalytics properties --identity debrouwere
     # show all of the web properties for an account
-    gash ls myproj myacc
+    googleanalytics properties debrouwere --identity debrouwere
     # show all of the profiles for a web property
-    gash ls myproj myacc myprop
+    googleanalytics properties debrouwere http://debrouwere.org  --identity debrouwere
+
+columns
+-------
+
+.. code:: shell
+
     # show all of the columns (metrics and dimensions) for a profile
-    gash ls myproj myacc myprop myprof
-    gash ls myproj . . .
-    # find all metrics and dimensions that have "queried" in their name
-    gash ls myproj myacc . . queried
+    googleanalytics columns --identity debrouwere
+    # find all metrics and dimensions that have "queried" or "pageviews" in their name
+    googleanalytics columns queried --identity debrouwere
+    googleanalytics columns pageviews --identity debrouwere
 
