@@ -9,6 +9,7 @@ Priorities:
 Can wait: 
 
 * [ ] nicer and more powerful `CoreQuery#segment` interface
+* [ ] nicer filtering interface
 * [ ] drop into a Python shell, automatically log in and expose `accounts`
 * [ ] support for Live Analytics
 * [ ] wrap errors into ones that are easier to understand and test against in try/except blocks.
