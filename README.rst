@@ -165,6 +165,9 @@ Here's the basic list of methods:
         .limit
         .segment
 
+More `detailed information is available in the
+wiki <https://github.com/debrouwere/google-analytics/wiki/Interface>`__.
+
 Querying closer to the metal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

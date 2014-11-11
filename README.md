@@ -126,6 +126,8 @@ Here's the basic list of methods:
         .limit
         .segment
 
+More [detailed information is available in the wiki](https://github.com/debrouwere/google-analytics/wiki/Interface).
+
 ### Querying closer to the metal
 
 This package is still in beta and you should expect some things not to work.
