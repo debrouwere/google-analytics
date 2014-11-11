@@ -7,7 +7,7 @@ setup(name='googleanalytics',
     author_email='stijn@debrouwere.org',
     url='https://github.com/debrouwere/google-analytics/',
     download_url='http://www.github.com/debrouwere/google-analytics/tarball/master',
-    version='0.8.2',
+    version='0.8.3',
     license='ISC',
     packages=find_packages(),
     keywords='data analytics api wrapper google',
@@ -22,7 +22,8 @@ setup(name='googleanalytics',
         'inspector>=0.2', 
         'flask==0.10', 
         'keyring==4', 
-        'click==3.3'
+        'click==3.3', 
+        'pyyaml>=3'
     ], 
     test_suite='googleanalytics.tests', 
     classifiers=[

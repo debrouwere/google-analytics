@@ -84,7 +84,7 @@ If you didn't add the client secrets to your environment variables, you
 can also just pass them directly from your code, though it's not always
 the safest option:
 
-::
+.. code:: python
 
     import googleanalytics as ga
     client = dict(
