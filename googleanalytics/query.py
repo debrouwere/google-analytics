@@ -41,6 +41,14 @@ class Report(object):
         self.total = raw['totalsForAllResults'].values()[0]
         # print self.totals
 
+    @property
+    def first(self):
+        return self.rows[0]
+
+    @property
+    def last(self):
+        return self.rows[-1]
+
     def serialize(self):
         serialized = []
         for row in self.rows:
