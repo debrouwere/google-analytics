@@ -176,18 +176,21 @@ class Query(object):
         A list of the metrics this query will ask for.
         """
 
-        metrics = self.raw['metrics']
-        head = metrics[:-1]
-        text = ", ".join(head)
-        if len(metrics) > 1:
-            tail = metrics[-1]
-            text = text + " and " + tail
+        if len(self.raw['metrics']):
+            metrics = self.raw['metrics']
+            head = metrics[0:-1] or metrics[0:1]
+            text = ", ".join(head)
+            if len(metrics) > 1:
+                tail = metrics[-1]
+                text = text + " and " + tail
+        else:
+            text = 'n/a'
 
         return text
 
     @property
     def title(self):
-        return self._title or self.description or 'n/a'
+        return self._title or self.description
 
     @title.setter
     def title(self, value):
