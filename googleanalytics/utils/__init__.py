@@ -52,7 +52,12 @@ def daterange(start, stop=None, months=0, days=0):
     else:
         stop = stop or start
 
-    return (start.isoformat(), stop.isoformat())
+    if isinstance(start, datetime.date):
+        start = start.isoformat()
+    if isinstance(stop, datetime.date):
+        stop = stop.isoformat()
+
+    return (start, stop)
 
 
 def wrap(obj):
