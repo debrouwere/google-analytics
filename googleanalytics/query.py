@@ -49,6 +49,14 @@ class Report(object):
     def last(self):
         return self.rows[-1]
 
+    @property
+    def values(self):
+        return self.first
+
+    @property
+    def value(self):
+        return self.first[0]
+
     def serialize(self):
         serialized = []
         for row in self.rows:
@@ -621,6 +629,30 @@ class CoreQuery(Query):
             cursor = cursor.next()
 
         return report
+
+    # various lazy-loading shortcuts
+    @property
+    def rows(self):
+        return self.execute().rows
+
+    @property
+    def first(self):
+        return self.execute().first
+
+    @property
+    def last(self):
+        return self.execute().last
+
+    @property
+    def value(self):
+        return self.execute().value
+
+    @property
+    def values(self):
+        return self.execute().values
+
+    def serialize(self):
+        return self.execute().serialize()
 
     def __repr__(self):
         return "<Query: {} ({})>".format(self.title, self.profile.name)
