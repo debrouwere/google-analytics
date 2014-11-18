@@ -16,3 +16,4 @@ Can wait:
 * [ ] example report-to-html template
 * [ ] unit tests for the authentication functionality
 * [ ] the ability to pluck rows and/or metrics in blueprints (e.g. it often happens that you query for a single metric in aggregate, and in that case the data you want back is `query.rows[0].mymetric`, that is, a single number, not a list of dictionaries)
+* [x] caching of queries when using the lazy-loading shortcuts

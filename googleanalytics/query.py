@@ -108,6 +108,7 @@ class Query(object):
         self.profile = profile
         self.webproperty = profile.webproperty
         self.account = profile.webproperty.account
+        self._report = None
         self._specify(metrics=metrics, dimensions=dimensions)
 
     def _serialize_criterion(criterion):
@@ -154,6 +155,7 @@ class Query(object):
     def clone(self):
         query = self.__class__(profile=self.profile, meta=self.meta)
         query.raw = deepcopy(self.raw)
+        query._report = None
         return query
 
     @utils.immutable
@@ -630,29 +632,35 @@ class CoreQuery(Query):
 
         return report
 
+    @property
+    def report(self):
+        if not self._report:
+            self._report = self.execute()
+        return self._report
+
     # various lazy-loading shortcuts
     @property
     def rows(self):
-        return self.execute().rows
+        return self.report.rows
 
     @property
     def first(self):
-        return self.execute().first
+        return self.report.first
 
     @property
     def last(self):
-        return self.execute().last
+        return self.report.last
 
     @property
     def value(self):
-        return self.execute().value
+        return self.report.value
 
     @property
     def values(self):
-        return self.execute().values
+        return self.report.values
 
     def serialize(self):
-        return self.execute().serialize()
+        return self.report.serialize()
 
     def __repr__(self):
         return "<Query: {} ({})>".format(self.title, self.profile.name)
