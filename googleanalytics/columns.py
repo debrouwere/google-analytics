@@ -2,19 +2,6 @@ import re
 import functools
 from dateutil.parser import parse as parse_date
 
-"""
-service.metadata().columns().list(reportType='ga').execute()
-
-            {u'attributes': {u'dataType': u'STRING',
-                             u'description': u'Name of the product being queried.',
-                             u'group': u'Related Products',
-                             u'status': u'PUBLIC',
-                             u'type': u'DIMENSION',
-                             u'uiName': u'Queried Product Name'},
-             u'id': u'ga:queryProductName',
-             u'kind': u'analytics#column'},
-
-"""
 
 TODO = NOOP = lambda x: x
 
@@ -38,10 +25,10 @@ def escape_chars(value, chars=',;'):
     return value
 
 def escape(method):
-    @functools.wraps
+    @functools.wraps(method)
     def escaped_method(self, *values):
         values = map(escape_chars, values)
-        return method(self, values)
+        return method(self, *values)
     return escaped_method
 
 
