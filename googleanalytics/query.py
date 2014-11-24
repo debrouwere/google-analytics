@@ -3,8 +3,10 @@ import collections
 import addressable
 import inspector
 import utils
+
 import account
 import columns
+import errors
 
 
 class Report(object):
@@ -598,8 +600,25 @@ class CoreQuery(Query):
         raw['dimensions'] = ','.join(self.raw['dimensions'])
 
         service = self.account.service
-        response = service.data().ga().get(**raw).execute()
-        
+
+        try:
+            response = service.data().ga().get(**raw).execute()
+        except Exception as err:
+            if isinstance(err, TypeError):
+                parameters = utils.paste(self.raw, '\t', '\n', pad=True)
+                message = err.message
+                diagnostics = utils.format(
+                    """
+                    {message}
+
+                    The query you submitted was:
+
+                    {parameters}
+                    """, message=message, parameters=parameters)
+                raise errors.InvalidRequestError(diagnostics)
+            else:
+                raise err
+
         return Report(response, self)        
 
     def execute(self):

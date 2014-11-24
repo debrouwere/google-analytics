@@ -1,5 +1,6 @@
 import copy
 import datetime
+import textwrap
 from dateutil.parser import parse as parse_date
 from dateutil.relativedelta import relativedelta
 
@@ -79,6 +80,23 @@ def affix(prefix, base, suffix, connector='_'):
         suffix = ''
 
     return prefix + base + suffix
+
+
+# analogous to R's paste function
+def paste(rows, connector='=', delimiter='&', pad=False):
+    if isinstance(rows, dict):
+        rows = rows.items()
+
+    if pad:
+        width = max([len(key) for key, value in rows])
+        rows = [(key.ljust(width), value) for key, value in rows]
+
+    return delimiter.join(
+        [connector.join([key, unicode(value)]) for key, value in rows])
+
+
+def format(string, **kwargs):
+    return textwrap.dedent(string).format(**kwargs)
 
 
 def translate(d, mapping):
