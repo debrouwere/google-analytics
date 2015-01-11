@@ -23,7 +23,7 @@ def immutable(method):
     return wrapped_method
 
 
-def noop(value):
+def identity(value):
     return value
 
 

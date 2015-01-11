@@ -1,6 +1,8 @@
+import functools
 import addressable
 import utils
 from columns import Column, Segment
+from columns import is_core, is_live, is_metric, is_dimension, is_supported, is_deprecated
 import query
 
 
@@ -51,15 +53,17 @@ class Account(object):
         _webproperties = [WebProperty(raw, self) for raw in raw_properties]
         return addressable.List(_webproperties, indices=['id', 'name'])
 
-    @property
     @utils.memoize
-    def columns(self, include_deprecated=False):
+    def get_columns(self, include_deprecated=False, report_type=None):
         is_unique = not include_deprecated
 
         if include_deprecated:
-            is_included = lambda column: True
+            is_included = utils.identity
         else:
-            is_included = lambda column: not column.is_deprecated
+            is_included = is_supported
+
+        if report_type:
+            raise NotImplementedError()
 
         items = self.service.metadata().columns().list(
             reportType='ga').execute()['items']
@@ -71,12 +75,34 @@ class Account(object):
     @property
     @utils.memoize
     def metrics(self):
-        return addressable.filter(lambda column: column.type == 'metric', self.columns)
+        columns = self.get_columns()
+        return addressable.filter(is_metric, columns)
+
+    @property
+    @utils.memoize
+    def core_metrics(self):
+        return addressable.filter(is_core, self.metrics)
+
+    @property
+    @utils.memoize
+    def live_metrics(self):
+        return addressable.filter(is_live, self.metrics)
 
     @property
     @utils.memoize
     def dimensions(self):
-        return addressable.filter(lambda column: column.type == 'dimension', self.columns)
+        columns = self.get_columns()
+        return addressable.filter(is_dimension, columns)
+
+    @property
+    @utils.memoize
+    def core_dimensions(self):
+        return addressable.filter(is_core, self.dimensions)
+
+    @property
+    @utils.memoize
+    def live_dimensions(self):
+        return addressable.filter(is_live, self.dimensions)
 
     @property
     @utils.memoize
@@ -202,12 +228,45 @@ class Profile(object):
     def live(self, metrics=[], dimensions=[]):
         """
         Return a query for certain metrics and dimensions, using the live API.
-
-        **Note:** this is a placeholder and not implemented yet.
         """
-
         return query.LiveQuery(self, metrics=metrics, dimensions=dimensions)
 
     def __repr__(self):
         return "<Profile: {} ({})>".format(
             self.name, self.id)
+
+
+class API(object):
+    REPORT_TYPES = {
+        'ga': 'ga', 
+        'realtime': 'rt', 
+    }
+
+    QUERY_TYPES = {
+        'ga': query.CoreQuery, 
+        'realtime': query.RealTimeQuery, 
+    }
+
+    # endpoint can be `ga` or `realtime`
+    def __init__(self, endpoint, columns, account):
+        self.account = account
+        self.report_type = REPORT_TYPES[endpoint]
+        self.query = functools.partial(QUERY_TYPES[endpoint], account)
+        root = account.service.data()
+        self.endpoint = getattr(root, endpoint)()
+
+    @property
+    @utils.memoize
+    def columns(self):
+        pass
+
+    @property
+    @utils.memoize
+    def all_columns(self):
+        pass
+
+    def metrics(self):
+        pass
+
+    def dimensions(self):
+        pass

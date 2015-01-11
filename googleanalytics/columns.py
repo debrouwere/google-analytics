@@ -1,9 +1,10 @@
 import re
 import functools
 from dateutil.parser import parse as parse_date
+from utils import identity
 
 
-TODO = NOOP = lambda x: x
+TODO = identity
 
 TYPES = {
     'STRING': unicode, 
@@ -32,19 +33,54 @@ def escape(method):
     return escaped_method
 
 
+def is_deprecated(column):
+    return column.is_deprecated
+
+def is_supported(column):
+    return not column.is_deprecated
+
+def is_metric(column):
+    return column.type == 'metric'
+
+def is_dimension(column):
+    return column.type == 'dimension'
+
+def is_core(column):
+    return column.report_type == 'ga'
+
+def is_live(column):
+    return column.report_type == 'rt'
+
+
+# reduce columns to their ids, and then go from one report type 
+# to another; this is useful for turning a realtime query into 
+# a core query or vice versa, though with no guarantees that 
+# the resulting query will still make sense (as only a limited
+# amount of metrics and dimensions apply to both realtime and 
+# core queries)
+report_types = ('ga', 'rt')
+def rebind(columns, dest='ga'):
+    src = report_types[report_types.index(dest) - 1]
+    swaps = []
+    for column in columns:
+        if isinstance(column, Column):
+            column = column.id
+        swapped = column.replace(src + ':', dest + ':')
+    return swaps
+
 class Column(object):
     def __init__(self, raw, account):
         attributes = raw['attributes']
         self.raw = raw
         self.account = account
-        self.id = raw['id']
-        self.slug = raw['id'].split(':')[1]
+        self.report_type, self.slug = raw['id'].split(':')
         self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
         self.name = attributes['uiName']
         self.group = attributes['group']
         self.description = attributes['description']
         self.type = attributes['type'].lower()
-        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or NOOP
+        # TODO: evaluate if we can improve casting
+        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or identity
         self.is_deprecated = attributes['status'] == 'DEPRECATED'
         self.is_allowed_in_segments = 'allowedInSegments' in attributes
 
@@ -101,11 +137,17 @@ class Column(object):
         return '-' + self.id
 
     def __repr__(self):
-        return "<{type}: {name} ({id})>".format(
-            type=self.type.capitalize(), 
+        report_types = {
+            'ga': 'Core', 
+            'rt': 'Realtime', 
+            None: 'Unbound', 
+        }
+        return "<{query_type} {column_type}: {name} ({id})>".format(
+            query_type=report_types[self.report_type],
+            column_type=self.type.capitalize(), 
             name=self.name, 
             id=self.id
-            )
+        )
 
 
 # see https://developers.google.com/analytics/devguides/reporting/core/v3/segments#reference

@@ -52,12 +52,12 @@ class Report(object):
         return self.rows[-1]
 
     @property
-    def values(self):
-        return self.first
-
-    @property
     def value(self):
         return self.first[0]
+
+    @property
+    def values(self):
+        return [row[0] for row in self.rows]
 
     def serialize(self):
         serialized = []
@@ -82,31 +82,12 @@ class Report(object):
         return len(self.rows)
 
 
-def condition(value):
-    return "condition::" + value
-
-def sequence(value):
-    return "sequence::" + value
-
-def all(*values):
-    return condition(";".join(values))
-
-def any(*values):
-    return condition(",".join(values))
-
-def followed_by(*values):
-    return sequence(";->>".join(values))
-
-def immediately_followed_by(*values):
-    return sequence(";->".join(values))
-
-
 class Query(object):
-    def __init__(self, profile, metrics=[], dimensions=[], meta={}, title=None):
+    def __init__(self, profile, metrics=[], dimensions=[], meta=None, title=None):
         self._title = title
         self.raw = {'ids': 'ga:' + profile.id}
         self.meta = {}
-        self.meta.update(meta)
+        self.meta.update(meta or {})
         self.profile = profile
         self.webproperty = profile.webproperty
         self.account = profile.webproperty.account
@@ -126,7 +107,8 @@ class Query(object):
         if isinstance(value, account.Column):
             return value
         else:
-            return self.account.columns[value]
+            columns = self.account.get_columns()
+            return columns[value]
 
     def _serialize_column(self, value):
         return self._normalize_column(value).id
@@ -153,6 +135,10 @@ class Query(object):
             return obj.id
         else:
             return obj
+
+    @property
+    def endpoint(self):
+        return self.account.service.data().ga()
 
     def clone(self):
         query = self.__class__(profile=self.profile, meta=self.meta)
@@ -301,6 +287,65 @@ class Query(object):
         self.raw['filters'] = value
 
 
+    def execute(self):
+        raw = deepcopy(self.raw)
+        raw['metrics'] = ','.join(self.raw['metrics'])
+        raw['dimensions'] = ','.join(self.raw['dimensions'])
+
+        try:
+            response = self.endpoint.get(**raw).execute()
+        except Exception as err:
+            if isinstance(err, TypeError):
+                parameters = utils.paste(self.raw, '\t', '\n', pad=True)
+                message = err.message
+                diagnostics = utils.format(
+                    """
+                    {message}
+
+                    The query you submitted was:
+
+                    {parameters}
+                    """, message=message, parameters=parameters)
+                raise errors.InvalidRequestError(diagnostics)
+            else:
+                raise err
+
+        return Report(response, self)    
+
+    @property
+    def report(self):
+        if not self._report:
+            self._report = self.get()
+        return self._report
+
+    # various lazy-loading shortcuts
+    @property
+    def rows(self):
+        return self.report.rows
+
+    @property
+    def first(self):
+        return self.report.first
+
+    @property
+    def last(self):
+        return self.report.last
+
+    @property
+    def value(self):
+        return self.report.value
+
+    @property
+    def values(self):
+        return self.report.values
+
+    def serialize(self):
+        return self.report.serialize()
+
+    def __repr__(self):
+        return "<{}: {} ({})>".format(self.__class__.__name__, self.title, self.profile.name)
+
+
 class CoreQuery(Query):
     """
     CoreQuery is the main way through which to produce reports
@@ -325,8 +370,8 @@ class CoreQuery(Query):
 
     ```python
     base = profile.query('pageviews')
-    january = base.daily('2014-01-01', months=1).execute()
-    february = base.daily('2014-02-01', months=1).execute()
+    january = base.daily('2014-01-01', months=1).get()
+    february = base.daily('2014-02-01', months=1).get()
     ```
     """
 
@@ -573,16 +618,6 @@ class CoreQuery(Query):
         self.raw['segment'] = value
         return self
 
-    def live(self):
-        """
-        Turn a regular query into one for the live API.
-
-        **Note:** a placeholder, not implemented yet.
-        """
-        # add in metrics, dimensions, sort, filters
-        raise NotImplementedError()
-        return RealTimeQuery(metrics=self.metrics, dimensions=self.dimensions)
-
     @utils.immutable
     def next(self):
         """
@@ -592,36 +627,9 @@ class CoreQuery(Query):
         step = self.raw.get('max_results', 1000)
         start = self.raw.get('start_index', 1) + step
         self.raw['start_index'] = start
-        return self
+        return self    
 
-    def _execute(self):
-        raw = deepcopy(self.raw)
-        raw['metrics'] = ','.join(self.raw['metrics'])
-        raw['dimensions'] = ','.join(self.raw['dimensions'])
-
-        service = self.account.service
-
-        try:
-            response = service.data().ga().get(**raw).execute()
-        except Exception as err:
-            if isinstance(err, TypeError):
-                parameters = utils.paste(self.raw, '\t', '\n', pad=True)
-                message = err.message
-                diagnostics = utils.format(
-                    """
-                    {message}
-
-                    The query you submitted was:
-
-                    {parameters}
-                    """, message=message, parameters=parameters)
-                raise errors.InvalidRequestError(diagnostics)
-            else:
-                raise err
-
-        return Report(response, self)        
-
-    def execute(self):
+    def get(self):
         """
         Run the query and return a `Report`.
 
@@ -638,7 +646,7 @@ class CoreQuery(Query):
         is_enough = False
 
         while not (is_enough or is_complete):
-            chunk = cursor._execute()
+            chunk = cursor.execute()
 
             if report:
                 report.append(chunk.raw[0], cursor)
@@ -651,48 +659,43 @@ class CoreQuery(Query):
 
         return report
 
-    @property
-    def report(self):
-        if not self._report:
-            self._report = self.execute()
-        return self._report
-
-    # various lazy-loading shortcuts
-    @property
-    def rows(self):
-        return self.report.rows
-
-    @property
-    def first(self):
-        return self.report.first
-
-    @property
-    def last(self):
-        return self.report.last
-
-    @property
-    def value(self):
-        return self.report.value
-
-    @property
-    def values(self):
-        return self.report.values
-
-    def serialize(self):
-        return self.report.serialize()
-
-    def __repr__(self):
-        return "<Query: {} ({})>".format(self.title, self.profile.name)
 
 
 class RealTimeQuery(Query):
     """
     A query against the [Google Analytics Live API][live].
 
-    **Note:** a placeholder, not implemented yet.
+    **Note:** alpha quality, under active development.
 
     [live]: https://developers.google.com/analytics/devguides/reporting/realtime/v3/reference/data/realtime#resource
     """
+
+    @property
+    def endpoint(self):
+        return self.account.service.data().realtime()
+
+    @utils.immutable
+    def limit(self, maximum):
+        """
+        Return a new query, limited to a certain number of results.
+
+        Unlike core reporting queries, you cannot specify a starting 
+        point for live queries, just the maximum results returned.
+
+        ```python
+        # first 50
+        query.limit(50)
+        ```
+        """
+
+        self.meta['limit'] = maximum
+        self.raw.update({
+            'max_results': maximum, 
+        })
+        return self
+
+    def get(self):
+        return self.execute()
 
 
 def describe(profile, description):

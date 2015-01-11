@@ -108,3 +108,7 @@ def translate(d, mapping):
             del d[src]
 
     return d
+
+
+def whitelist(d, allowed):
+    return {k: v for k, v in d.items() if k in allowed}
