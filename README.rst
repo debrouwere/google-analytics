@@ -1,3 +1,8 @@
+Google Analytics for Python and the command-line
+================================================
+
+|Build Status|
+
 ``google-analytics`` takes the pain out of working with the Google
 Analytics API. It is written in Python but there's also a command-line
 interface.
@@ -290,3 +295,5 @@ columns
     googleanalytics columns queried --identity debrouwere
     googleanalytics columns pageviews --identity debrouwere
 
+.. |Build Status| image:: https://travis-ci.org/debrouwere/google-analytics.svg
+   :target: https://travis-ci.org/debrouwere/google-analytics
