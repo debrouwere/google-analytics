@@ -52,22 +52,6 @@ def is_live(column):
     return column.report_type == 'rt'
 
 
-# reduce columns to their ids, and then go from one report type 
-# to another; this is useful for turning a realtime query into 
-# a core query or vice versa, though with no guarantees that 
-# the resulting query will still make sense (as only a limited
-# amount of metrics and dimensions apply to both realtime and 
-# core queries)
-report_types = ('ga', 'rt')
-def rebind(columns, dest='ga'):
-    src = report_types[report_types.index(dest) - 1]
-    swaps = []
-    for column in columns:
-        if isinstance(column, Column):
-            column = column.id
-        swapped = column.replace(src + ':', dest + ':')
-    return swaps
-
 class Column(object):
     def __init__(self, raw, account):
         attributes = raw['attributes']
