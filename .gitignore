@@ -73,3 +73,9 @@ docs/build/
 
 # PyBuilder
 target/
+
+# environment variables
+.env
+*.env
+!example.env
+!*.example.env
