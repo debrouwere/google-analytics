@@ -1,5 +1,6 @@
 from copy import deepcopy
 import collections
+import time
 import addressable
 import inspector
 import utils
@@ -112,6 +113,15 @@ class Query(object):
         self.account = profile.webproperty.account
         self._report = None
         self._specify(metrics=metrics, dimensions=dimensions)
+
+    _lock = 0
+
+    # no not execute more than one query per second
+    def _wait(self):
+        now = time.time()
+        elapsed = now - self._lock
+        time.sleep(max(0, 1 - elapsed))
+        self._lock = now
 
     def _serialize_criterion(criterion):
         pattern = r'(?P<identifier>[\w:]+)((?P<operator>[\!\=\>\<\@\~]+)(?P<value>[\w:]+))?'
@@ -600,6 +610,7 @@ class CoreQuery(Query):
         raw['dimensions'] = ','.join(self.raw['dimensions'])
 
         service = self.account.service
+        self._wait()
 
         try:
             response = service.data().ga().get(**raw).execute()
