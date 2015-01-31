@@ -4,22 +4,23 @@ Google Analytics for Python and the command-line
 |Build Status|
 
 ``google-analytics`` takes the pain out of working with the Google
-Analytics API. It is written in Python but there's also a command-line
-interface.
+Analytics reporting APIs. It supports both the Core and the Real Time
+API. It is written in Python but there's also a command-line interface.
 
 (The goal is for the command-line interface to have feature parity with
 the Python interface. We're working on it.)
 
-It is built on top of `Google's own API client for
+This package is built on top of `Google's own API client for
 Python <https://developers.google.com/api-client-library/python/start/installation>`__.
 
 -  **Authentication.** OAuth2 is a bit of a pain and we've made it
    easier, both for interactive use and for `server
    applications <https://github.com/debrouwere/google-analytics/blob/master/examples/server.py>`__.
-   We'll also save your credentials in the operating system's keychain.
+   We can also save your credentials in the operating system's keychain
+   if you want to.
 -  **Querying.** Easier to query per week, month or year. Query using
    metric IDs or using their full names, whichever you think is nicer.
-   Work with both the Core and the Live APIs.
+   Work with both the Core and the Real Time APIs.
 -  **Reporting.** Generate reports from the command-line. Optionally
    describe reports and queries in `easy-to-read and easy-to-write YAML
    files <https://github.com/debrouwere/google-analytics/blob/master/examples/query.yml>`__.
@@ -82,7 +83,7 @@ profile rather than a list of all accounts:
         webproperty='http://debrouwere.org', 
         profile='debrouwere.org'
         )
-    report = profile.query('pageviews').range('2014-10-01', '2014-10-31').execute()
+    report = profile.query('pageviews').range('2014-10-01', '2014-10-31').get()
     print report['pageviews']
 
 If you didn't add the client secrets to your environment variables, you
@@ -144,17 +145,19 @@ The querying interface looks like this.
     webproperty = account.webproperties[0]
     profile = webproperty.profiles[0]
 
-    print account.metrics
-    print account.dimensions
+    print profile.core.metrics
+    print profile.realtime.metrics
+    print profile.core.dimensions
+    print profile.realtime.metrics
     # call metrics and other columns by their name, their full id
     # or their slug (the id without the `ga:` prefix)
-    print account.metrics['pageviews'] == account.metrics['ga:pageviews']
+    print profile.core.metrics['pageviews'] == profile.core.metrics['ga:pageviews']
 
-    q = profile.query('pageviews').range('2014-06-01', days=5)
-    report = q.execute()
+    q = profile.core.query('pageviews').range('2014-06-01', days=5)
+    report = q.get()
     print report['pageviews']
 
-Here's the basic list of methods:
+Here's the basic list of methods for the Core Reporting API:
 
 ::
 
@@ -188,7 +191,7 @@ on queries.
 
 .. code:: python
 
-    query = profile.query() \
+    query = profile.core.query() \
         .set(metrics=['ga:pageviews']) \
         .set(dimensions=['ga:yearMonth']) \
         .set('start_date', '2014-07-01') \
@@ -201,7 +204,7 @@ report data in ``query.raw`` and ``report.raw`` respectively.
 
     from pprint import pprint
     pprint(query.raw)
-    report = query.execute()
+    report = query.get()
     pprint(report.raw)
 
 Finally, if you'd like to just use the simplified oAuth functionality in
@@ -219,6 +222,35 @@ interface on the ``Account`` object.
         'end_date': '2014-07-05', 
     }
     accounts[0].service.data().ga().get(raw_query).execute()
+
+Using the Real Time Reporting API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The [Real Time Reporting API][realtime] is currently in closed beta.
+However, you can `request
+access <https://docs.google.com/forms/d/1qfRFysCikpgCMGqgF3yXdUyQW4xAlLyjKuOoOEFN2Uw/viewform>`__
+by filling out a short form and will generally be granted access to the
+API within 24 hours.
+
+The Real Time API is very similar to the Core API:
+
+.. code:: python
+
+    import googleanalytics
+    accounts = googleanalytics.authenticate(identity='me')
+    profile = accounts[0].webproperties[0].profiles[0]
+    # Core API
+    profile.core.query('pageviews').daily('3daysAgo').values
+    # Real Time API
+    profile.realtime.query('pageviews', 'minutes ago').values
+
+The only caveat is that not all of the metrics and dimensions you're
+used to from the Core are supported. Take a look at the `Real Time
+Reporting API reference
+documentation <https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/>`__
+to find out more, or check out all available columns interactively
+through ``Profile#realtime.metrics`` and ``Profile#realtime.dimensions``
+in Python.
 
 CLI
 ---

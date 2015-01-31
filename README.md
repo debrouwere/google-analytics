@@ -2,14 +2,14 @@
 
 [![Build Status](https://travis-ci.org/debrouwere/google-analytics.svg)](https://travis-ci.org/debrouwere/google-analytics)
 
-`google-analytics` takes the pain out of working with the Google Analytics API. It is written in Python but there's also a command-line interface.
+`google-analytics` takes the pain out of working with the Google Analytics reporting APIs. It supports both the Core and the Real Time API. It is written in Python but there's also a command-line interface.
 
 (The goal is for the command-line interface to have feature parity with the Python interface. We're working on it.)
 
-It is built on top of [Google's own API client for Python](https://developers.google.com/api-client-library/python/start/installation).
+This package is built on top of [Google's own API client for Python](https://developers.google.com/api-client-library/python/start/installation).
 
-* **Authentication.** OAuth2 is a bit of a pain and we've made it easier, both for interactive use and for [server applications][rauth]. We'll also save your credentials in the operating system's keychain.
-* **Querying.** Easier to query per week, month or year. Query using metric IDs or using their full names, whichever you think is nicer. Work with both the Core and the Live APIs.
+* **Authentication.** OAuth2 is a bit of a pain and we've made it easier, both for interactive use and for [server applications][rauth]. We can also save your credentials in the operating system's keychain if you want to.
+* **Querying.** Easier to query per week, month or year. Query using metric IDs or using their full names, whichever you think is nicer. Work with both the Core and the Real Time APIs.
 * **Reporting.** Generate reports from the command-line. Optionally describe reports and queries in [easy-to-read and easy-to-write YAML files][yaml]. Reports in Python work better too: iterate through the entire report or column-per-column.
 * **Exploration.** Traverse the account hierarchy from account to webproperty to profile to dimensions, both programmatically and with the included command-line interface.
 
@@ -52,7 +52,7 @@ profile = ga.authenticate(
     webproperty='http://debrouwere.org', 
     profile='debrouwere.org'
     )
-report = profile.query('pageviews').range('2014-10-01', '2014-10-31').execute()
+report = profile.query('pageviews').range('2014-10-01', '2014-10-31').get()
 print report['pageviews']
 ```
 
@@ -105,18 +105,20 @@ account = accounts[0]
 webproperty = account.webproperties[0]
 profile = webproperty.profiles[0]
 
-print account.metrics
-print account.dimensions
+print profile.core.metrics
+print profile.realtime.metrics
+print profile.core.dimensions
+print profile.realtime.metrics
 # call metrics and other columns by their name, their full id
 # or their slug (the id without the `ga:` prefix)
-print account.metrics['pageviews'] == account.metrics['ga:pageviews']
+print profile.core.metrics['pageviews'] == profile.core.metrics['ga:pageviews']
 
-q = profile.query('pageviews').range('2014-06-01', days=5)
-report = q.execute()
+q = profile.core.query('pageviews').range('2014-06-01', days=5)
+report = q.get()
 print report['pageviews']
 ```
 
-Here's the basic list of methods:
+Here's the basic list of methods for the Core Reporting API:
 
     query
         .sort
@@ -139,7 +141,7 @@ This package is still in beta and you should expect some things not to work.
 In these cases, it can be useful to use the lower-level access this module provides through the `query.set` method -- you can pass set either a key and value, a dictionary with key-value pairs or you can pass keyword arguments. These will then be added to the raw query. You can always check what the raw query is going to be with the build method on queries.
 
 ```python
-query = profile.query() \
+query = profile.core.query() \
     .set(metrics=['ga:pageviews']) \
     .set(dimensions=['ga:yearMonth']) \
     .set('start_date', '2014-07-01') \
@@ -151,7 +153,7 @@ Secondly, don't forget that you can access the raw query as well as raw report d
 ```python
 from pprint import pprint
 pprint(query.raw)
-report = query.execute()
+report = query.get()
 pprint(report.raw)
 ```
 
@@ -168,6 +170,27 @@ raw_query = {
 }
 accounts[0].service.data().ga().get(raw_query).execute()
 ```
+
+### Using the Real Time Reporting API
+
+The [Real Time Reporting API][realtime] is currently in closed beta. However, you can [request access][realtime/access] by filling out a short form and will generally be granted access to the API within 24 hours.
+
+The Real Time API is very similar to the Core API:
+
+```python
+import googleanalytics
+accounts = googleanalytics.authenticate(identity='me')
+profile = accounts[0].webproperties[0].profiles[0]
+# Core API
+profile.core.query('pageviews').daily('3daysAgo').values
+# Real Time API
+profile.realtime.query('pageviews', 'minutes ago').values
+```
+
+The only caveat is that not all of the metrics and dimensions you're used to from the Core are supported. Take a look at the [Real Time Reporting API reference documentation][realtime/reference] to find out more, or check out all available columns interactively through `Profile#realtime.metrics` and `Profile#realtime.dimensions` in Python.
+
+[realtime/access]:https://docs.google.com/forms/d/1qfRFysCikpgCMGqgF3yXdUyQW4xAlLyjKuOoOEFN2Uw/viewform
+[realtime/reference]:https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/
 
 ## CLI
 

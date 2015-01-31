@@ -11,8 +11,9 @@ to get existing credentials from the keyring, from environment
 variables, it prompts for information when required and so on.
 """
 
-import keyring, oauth
-from oauth import Flow, Credentials
+from . import keyring
+from . import oauth
+from .oauth import Flow, Credentials
 
 
 def navigate(accounts, account=None, webproperty=None, profile=None):
