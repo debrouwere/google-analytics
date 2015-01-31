@@ -18,7 +18,7 @@ class TestQueryingBase(unittest.TestCase):
             self.account = accounts[0]
             self.webproperty = self.account.webproperties[0]
             self.profile = self.webproperty.profiles[0]
-            self.query = self.profile.query
+            self.query = self.profile.core.query
 
 class TestQuerying(TestQueryingBase):
     def test_raw(self):
@@ -54,7 +54,7 @@ class TestQuerying(TestQueryingBase):
     def test_query(self):
         """ It should be able to run a query and return a report. """
         q = self.query('pageviews').range('2014-07-01', '2014-07-05', granularity='day')
-        report = q.execute()
+        report = q.get()
 
         self.assertTrue(report.rows)
 
@@ -83,9 +83,9 @@ class TestQuerying(TestQueryingBase):
         define the granularity (hour, day, week, month, year) at which 
         to query should return results. """
         base = self.query('pageviews')
-        a = base.range('2014-07-01', '2014-07-03').execute()
-        b = base.range('2014-07-01', '2014-07-03', granularity='day').execute()
-        c = base.daily('2014-07-01', '2014-07-03').execute()
+        a = base.range('2014-07-01', '2014-07-03').get()
+        b = base.range('2014-07-01', '2014-07-03', granularity='day').get()
+        c = base.daily('2014-07-01', '2014-07-03').get()
 
         self.assertEqual(len(a), 1)
         self.assertEqual(len(b), 3)
@@ -97,7 +97,7 @@ class TestQuerying(TestQueryingBase):
         q = self.query('pageviews') \
             .range('2014-07-01', '2014-07-05', granularity='day') \
             .step(2)
-        report = q.execute()
+        report = q.get()
 
         self.assertEqual(len(report.queries), 3)
 
@@ -106,8 +106,8 @@ class TestQuerying(TestQueryingBase):
         base = self \
             .query('pageviews') \
             .range('2014-07-01', '2014-07-05', granularity='day')
-        full_report = base.execute()
-        limited_report = base.limit(2).execute()
+        full_report = base.get()
+        limited_report = base.limit(2).get()
 
         self.assertEqual(len(limited_report.rows), 2)
         self.assertEqual(len(limited_report), 2)
@@ -119,8 +119,8 @@ class TestQuerying(TestQueryingBase):
         base = self \
             .query('pageviews') \
             .range('2014-07-01', '2014-07-05', granularity='day')
-        full_report = base.execute()
-        limited_report = base.limit(2, 2).execute()
+        full_report = base.get()
+        limited_report = base.limit(2, 2).get()
 
         self.assertEqual(len(limited_report.rows), 2)
         self.assertEqual(len(limited_report), 2)
@@ -132,11 +132,11 @@ class TestQuerying(TestQueryingBase):
             .query('pageviews') \
             .range('2014-07-01', '2014-07-05', granularity='day')
 
-        unsorted_report = q.execute()
+        unsorted_report = q.get()
         sorted_report = q \
-            .sort('pageviews').execute()
+            .sort('pageviews').get()
         inverse_sorted_report = q \
-            .sort(-self.account.columns['pageviews']).execute()
+            .sort(-self.account.columns['pageviews']).get()
 
         self.assertEqual(inverse_sorted_report.queries[0].raw['sort'], '-ga:pageviews')
         self.assertEqual(
@@ -152,7 +152,7 @@ class TestQuerying(TestQueryingBase):
         """ It should cast columns that contain numeric data to the 
         proper numeric types. """
         q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
-        report = q.execute()
+        report = q.get()
 
         for n in report['pageviews']:
             self.assertIsInstance(n, int)
@@ -160,7 +160,7 @@ class TestQuerying(TestQueryingBase):
     def test_cast_dates(self):
         """ It should cast columns containing dates to proper date objects. """
         q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
-        report = q.execute()
+        report = q.get()
 
         for date in report['date']:
             self.assertIsInstance(date, datetime.datetime)
@@ -170,16 +170,16 @@ class TestQuerying(TestQueryingBase):
         q = self.query('pageviews').range('2014-07-01')
         qs = q.segment('Direct Traffic')
 
-        r = q.execute()
-        rs = qs.execute()
+        r = q.get()
+        rs = qs.get()
 
         self.assertTrue(rs['pageviews'][0] <= r['pageviews'][0])
 
     def test_filter_simple(self):
         base = self.query('pageviews', 'ga:pagePath').range('2014-07-01')
-        every = base.execute()
-        lt = base.filter('ga:pageviews<10').execute()
-        gt = base.filter('ga:pageviews>10').execute()
+        every = base.get()
+        lt = base.filter('ga:pageviews<10').get()
+        gt = base.filter('ga:pageviews>10').get()
         every = set(every['pagepath'])
         lt = set(lt['pagepath'])
         gt = set(gt['pagepath'])
