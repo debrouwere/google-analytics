@@ -21,7 +21,7 @@ def vectorize(fn):
     and returning a list or a single item depending
     on what is desired.
     """
-    @functools.wraps(fn):
+    @functools.wraps(fn)
     def vectorized_fn(values, *vargs, **kwargs):
         wrap = not isinstance(values, (list, tuple))
         should_unwrap = not kwargs.get('wrap', False)

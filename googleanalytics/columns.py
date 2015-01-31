@@ -34,67 +34,6 @@ def escape(method):
     return escaped_method
 
 
-def is_deprecated(column):
-    return column.is_deprecated
-
-def is_supported(column):
-    return not column.is_deprecated
-
-def is_metric(column):
-    return column.type == 'metric'
-
-def is_dimension(column):
-    return column.type == 'dimension'
-
-def is_core(column):
-    return column.report_type == 'ga'
-
-def is_live(column):
-    return column.report_type == 'rt'
-
-
-class ColumnList(addressable.List):
-    COLUMN_TYPE = Column
-
-    def __init__(self, columns, unique=True):
-        indices = ('id', 'slug', 'name')
-        super(ColumnList, self).__init__(self, columns, 
-            indices=indices, 
-            unique=unique, 
-            insensitive=True, 
-            )
-
-    def normalize(self, value):
-        if isinstance(value, self.COLUMN_TYPE):
-            return value
-        else:
-            return self[value]
-
-    @utils.vectorize
-    def serialize(self, value, greedy=True):
-        """
-        Greedy serialization requires the value to either be a column 
-        or convertible to a column, whereas non-greedy serialization 
-        will pass through any string as-is and will only serialize 
-        Column objects.
-
-        Non-greedy serialization is useful when preparing queries with 
-        custom filters or segments.
-        """
-
-        if greedy and not isinstance(value, Column):
-            value = self.normalize(value)
-
-        if isinstance(value, Column):
-            return value.id
-        else:
-            return value
-
-
-class SegmentList(ColumnList):
-    COLUMN_TYPE = Segment
-
-
 class Column(object):
     def __init__(self, raw, account):
         attributes = raw['attributes']
@@ -204,3 +143,64 @@ class Goal(object):
             webPropertyId=firstWebpropertyId,
             profileId=firstProfileId).execute()
     """
+
+
+class ColumnList(addressable.List):
+    COLUMN_TYPE = Column
+
+    def __init__(self, columns, unique=True):
+        indices = ('id', 'slug', 'name')
+        super(ColumnList, self).__init__(self, columns, 
+            indices=indices, 
+            unique=unique, 
+            insensitive=True, 
+            )
+
+    def normalize(self, value):
+        if isinstance(value, self.COLUMN_TYPE):
+            return value
+        else:
+            return self[value]
+
+    @vectorize
+    def serialize(self, value, greedy=True):
+        """
+        Greedy serialization requires the value to either be a column 
+        or convertible to a column, whereas non-greedy serialization 
+        will pass through any string as-is and will only serialize 
+        Column objects.
+
+        Non-greedy serialization is useful when preparing queries with 
+        custom filters or segments.
+        """
+
+        if greedy and not isinstance(value, Column):
+            value = self.normalize(value)
+
+        if isinstance(value, Column):
+            return value.id
+        else:
+            return value
+
+
+class SegmentList(ColumnList):
+    COLUMN_TYPE = Segment
+
+
+def is_deprecated(column):
+    return column.is_deprecated
+
+def is_supported(column):
+    return not column.is_deprecated
+
+def is_metric(column):
+    return column.type == 'metric'
+
+def is_dimension(column):
+    return column.type == 'dimension'
+
+def is_core(column):
+    return column.report_type == 'ga'
+
+def is_live(column):
+    return column.report_type == 'rt'

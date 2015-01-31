@@ -21,7 +21,7 @@ class Account(object):
     import googleanalytics as ga
     accounts = ga.authenticate()
     profile = accounts['debrouwere.org'].webproperties['UA-12933299-1'].profiles['debrouwere.org']
-    report = profile.query('pageviews').range('2014-10-01', '2014-10-31').execute()
+    report = profile.core.query('pageviews').range('2014-10-01', '2014-10-31').execute()
     print(report['pageviews'])
     ```
     """
@@ -53,69 +53,6 @@ class Account(object):
         _webproperties = [WebProperty(raw, self) for raw in raw_properties]
         return addressable.List(_webproperties, indices=['id', 'name'])
 
-    @utils.memoize
-    def get_columns(self, include_deprecated=False, report_type=None):
-        is_unique = not include_deprecated
-
-        if include_deprecated:
-            is_included = utils.identity
-        else:
-            is_included = is_supported
-
-        if report_type:
-            raise NotImplementedError()
-
-        items = self.service.metadata().columns().list(
-            reportType='ga').execute()['items']
-        _columns = [Column(item, self) for item in items]
-        _filtered_columns = filter(is_included, _columns)
-        return addressable.List(_filtered_columns, 
-            indices=['id', 'slug', 'name'], unique=is_unique, insensitive=True)
-
-    @property
-    @utils.memoize
-    def metrics(self):
-        columns = self.get_columns()
-        return addressable.filter(is_metric, columns)
-
-    @property
-    @utils.memoize
-    def core_metrics(self):
-        return addressable.filter(is_core, self.metrics)
-
-    @property
-    @utils.memoize
-    def live_metrics(self):
-        return addressable.filter(is_live, self.metrics)
-
-    @property
-    @utils.memoize
-    def dimensions(self):
-        columns = self.get_columns()
-        return addressable.filter(is_dimension, columns)
-
-    @property
-    @utils.memoize
-    def core_dimensions(self):
-        return addressable.filter(is_core, self.dimensions)
-
-    @property
-    @utils.memoize
-    def live_dimensions(self):
-        return addressable.filter(is_live, self.dimensions)
-
-    @property
-    @utils.memoize
-    def segments(self):
-        raw_segments = self.service.management().segments().list().execute()['items']
-        return addressable.List([Segment(raw, self) for raw in raw_segments], 
-            indices=['id', 'name'], insensitive=True)
-
-    @property
-    @utils.memoize
-    def goals(self):
-        raise NotImplementedError()
-
     @property
     def query(self, *vargs, **kwargs):
         """ A shortcut to the first profile of the first webproperty. """
@@ -131,8 +68,6 @@ class WebProperty(object):
     A web property is a particular website you're tracking in Google Analytics.
     It has one or more profiles, and you will need to pick one from which to 
     launch your queries.
-
-
     """
 
     def __init__(self, raw, account):
@@ -193,43 +128,8 @@ class Profile(object):
         self.account = webproperty.account
         self.id = raw['id']
         self.name = raw['name']
-
-    def query(self, metrics=[], dimensions=[]):
-        """
-        Return a query for certain metrics and dimensions.
-
-        ```python
-        # pageviews (metric) as a function of geographical region
-        profile.query('pageviews', 'region')
-        # pageviews as a function of browser
-        profile.query(['pageviews'], ['browser'])
-        ```
-
-        The returned query can then be further refined using 
-        all methods available on the `CoreQuery` object, such as 
-        `limit`, `sort`, `segment` and so on.
-
-        Metrics and dimensions may be either strings (the column id or
-        the human-readable column name) or Metric or Dimension 
-        objects.
-
-        Metrics and dimensions specified as a string are not case-sensitive.
-
-        ```python
-        profile.query
-        ```
-
-        If specifying only a single metric or dimension, you can 
-        but are not required to wrap it in a list.
-        """
-
-        return query.CoreQuery(self, metrics=metrics, dimensions=dimensions)
-
-    def live(self, metrics=[], dimensions=[]):
-        """
-        Return a query for certain metrics and dimensions, using the live API.
-        """
-        return query.LiveQuery(self, metrics=metrics, dimensions=dimensions)
+        self.core = API(self, 'ga')
+        self.realtime = API(self, 'realtime')
 
     def __repr__(self):
         return "<Profile: {} ({})>".format(
@@ -247,26 +147,60 @@ class API(object):
         'realtime': query.RealTimeQuery, 
     }
 
-    # endpoint can be `ga` or `realtime`
-    def __init__(self, endpoint, columns, account):
+    def __init__(self, account, endpoint):
+        """
+        Endpoint can be one of `ga` or `realtime`.
+        """
+        # various shortcuts
         self.account = account
-        self.report_type = REPORT_TYPES[endpoint]
-        self.query = functools.partial(QUERY_TYPES[endpoint], account)
+        self.service = account.service
         root = account.service.data()
         self.endpoint = getattr(root, endpoint)()
+        # query interface 
+        self.report_type = REPORT_TYPES[endpoint]
+        self.query = functools.partial(QUERY_TYPES[endpoint], account)
 
     @property
     @utils.memoize
     def columns(self):
-        pass
+        return addressable.filter(is_supported, self.all_columns)
 
     @property
     @utils.memoize
     def all_columns(self):
-        pass
+        query = self.service.metadata().columns().list(
+            reportType=self.report_type
+            )
+        raw_columns = query.execute()['items']
+        hydrated_columns = [Column(item, self) for item in items]
+        return addressable.List(hydrated_columns, 
+            indices=['id', 'slug', 'name'], 
+            unique=False, 
+            insensitive=True, 
+            )
 
+    @property
+    @utils.memoize
+    def segments(self):
+        query = self.service.management().segments().list()
+        raw_segments = query.execute()['items']
+        hydrated_segments = [Segment(raw, self) for raw in raw_segments]
+        return addressable.List(hydrated_segments, 
+            indices=['id', 'name'], 
+            insensitive=True, 
+            )
+
+    @property
+    @utils.memoize
     def metrics(self):
-        pass
+        return addressable.filter(is_metric, self.columns)
 
+    @property
+    @utils.memoize
     def dimensions(self):
-        pass
+        return addressable.filter(is_dimension, self.columns)
+
+    @property
+    @utils.memoize
+    def goals(self):
+        raise NotImplementedError()

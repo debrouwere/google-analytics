@@ -83,6 +83,38 @@ class Report(object):
 
 
 class Query(object):
+    """
+    **Warning:** potentially out of date information.
+
+    Return a query for certain metrics and dimensions.
+
+    ```python
+    # pageviews (metric) as a function of geographical region
+    profile.query('pageviews', 'region')
+    # pageviews as a function of browser
+    profile.query(['pageviews'], ['browser'])
+    ```
+
+    The returned query can then be further refined using 
+    all methods available on the `CoreQuery` object, such as 
+    `limit`, `sort`, `segment` and so on.
+
+    Metrics and dimensions may be either strings (the column id or
+    the human-readable column name) or Metric or Dimension 
+    objects.
+
+    Metrics and dimensions specified as a string are not case-sensitive.
+
+    ```python
+    profile.query
+    ```
+
+    If specifying only a single metric or dimension, you can 
+    but are not required to wrap it in a list.
+    """
+
+    _lock = 0
+
     def __init__(self, profile, metrics=[], dimensions=[], meta=None, title=None):
         self._title = title
         self.raw = {'ids': 'ga:' + profile.id}
@@ -93,8 +125,6 @@ class Query(object):
         self.account = profile.webproperty.account
         self._report = None
         self._specify(metrics=metrics, dimensions=dimensions)
-
-    _lock = 0
 
     # no not execute more than one query per second
     def _wait(self):
