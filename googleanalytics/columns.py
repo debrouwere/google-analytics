@@ -39,7 +39,8 @@ class Column(object):
         attributes = raw['attributes']
         self.raw = raw
         self.account = account
-        self.report_type, self.slug = raw['id'].split(':')
+        self.id = raw['id']
+        self.report_type, self.slug = self.id.split(':')
         self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
         self.name = attributes['uiName']
         self.group = attributes['group']
@@ -108,7 +109,7 @@ class Column(object):
             'rt': 'Realtime', 
             None: 'Unbound', 
         }
-        return "<{query_type} {column_type}: {name} ({id})>".format(
+        return "<googleanalytics.columns.{query_type} object: {column_type}, {name} ({id})>".format(
             query_type=report_types[self.report_type],
             column_type=self.type.capitalize(), 
             name=self.name, 
@@ -118,6 +119,7 @@ class Column(object):
 
 # see https://developers.google.com/analytics/devguides/reporting/core/v3/segments#reference
 class Segment(Column):
+    # CHECK: do we need to call super here?
     def __init__(self, raw, account):
         self.raw = raw
         self.id = raw['segmentId']
@@ -126,7 +128,7 @@ class Segment(Column):
         self.definition = raw['definition']
 
     def __repr__(self):
-        return "<Segment: {name} ({id})>".format(**self.__dict__)
+        return "<googleanalytics.columns.Segment object: {name} ({id})>".format(**self.__dict__)
 
 
 

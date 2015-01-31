@@ -14,7 +14,7 @@ class Report(object):
         self.raw = []
         self.queries = []
 
-        registry = query.profile.webproperty.account.columns
+        registry = query.api.all_columns
         headers = [registry[header['name']] for header in raw['columnHeaders']]
         slugs = [header.pyslug for header in headers]
         self.row_cls = collections.namedtuple('Row', slugs)
@@ -81,6 +81,12 @@ class Report(object):
     def __len__(self):
         return len(self.rows)
 
+    # TODO: would be cool if we could split up headers 
+    # into metrics vs. dimensions so we could say 
+    # "pageviews by day, browser"
+    def __repr__(self):
+        headers = [header.name for header in self.headers]
+        return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
 
 class Query(object):
     """
@@ -115,14 +121,15 @@ class Query(object):
 
     _lock = 0
 
-    def __init__(self, profile, metrics=[], dimensions=[], meta=None, title=None):
+    def __init__(self, api, metrics=[], dimensions=[], meta=None, title=None):
         self._title = title
-        self.raw = {'ids': 'ga:' + profile.id}
+        self.raw = {'ids': 'ga:' + api.profile.id}
         self.meta = {}
         self.meta.update(meta or {})
-        self.profile = profile
-        self.webproperty = profile.webproperty
-        self.account = profile.webproperty.account
+        self.api = api
+        self.profile = api.profile
+        self.webproperty = api.profile.webproperty
+        self.account = api.profile.webproperty.account
         self._report = None
         self._specify(metrics=metrics, dimensions=dimensions)
 
@@ -148,8 +155,7 @@ class Query(object):
         if isinstance(value, Column):
             return value
         else:
-            columns = self.account.get_columns()
-            return columns[value]
+            return self.api.all_columns[value]
 
     def _serialize_column(self, value):
         return self._normalize_column(value).id
@@ -182,7 +188,7 @@ class Query(object):
         return self.account.service.data().ga()
 
     def clone(self):
-        query = self.__class__(profile=self.profile, meta=self.meta)
+        query = self.__class__(api=self.api, meta=self.meta)
         query.raw = deepcopy(self.raw)
         query._report = None
         return query
@@ -191,7 +197,7 @@ class Query(object):
     def set(self, key=None, value=None, **kwargs):
         """
         `set` is a way to add raw properties to the request, 
-        for features that python-google-analytics does not 
+        for features that this module does not 
         support or supports incompletely. For convenience's 
         sake, it will serialize Column objects but will 
         leave any other kind of value alone.
@@ -385,7 +391,7 @@ class Query(object):
         return self.report.serialize()
 
     def __repr__(self):
-        return "<{}: {} ({})>".format(self.__class__.__name__, self.title, self.profile.name)
+        return "<googleanalytics.query.{} object: {} ({})>".format(self.__class__.__name__, self.title, self.profile.name)
 
 
 class CoreQuery(Query):
@@ -564,6 +570,10 @@ class CoreQuery(Query):
         """
 
         kwargs['granularity'] = 'year'
+        return self.range(*vargs, **kwargs)
+
+    @inspector.implements(range)
+    def lifetime(self, *vargs, **kwargs):
         return self.range(*vargs, **kwargs)
 
     @utils.immutable

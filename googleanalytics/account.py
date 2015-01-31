@@ -59,7 +59,7 @@ class Account(object):
         return self.webproperties[0].query(*vargs, **kwargs)
 
     def __repr__(self):
-        return "<Account: {} ({})>".format(
+        return "<googleanalytics.account.Account object: {} ({})>".format(
             self.name, self.id)
 
 
@@ -106,7 +106,7 @@ class WebProperty(object):
         return self.profiles[0].query(*vargs, **kwargs)
 
     def __repr__(self):
-        return "<WebProperty: {} ({})>".format(
+        return "<googleanalytics.account.WebProperty object: {} ({})>".format(
             self.name, self.id)
 
 
@@ -132,7 +132,7 @@ class Profile(object):
         self.realtime = API(self, 'realtime')
 
     def __repr__(self):
-        return "<Profile: {} ({})>".format(
+        return "<googleanalytics.account.Profile object: {} ({})>".format(
             self.name, self.id)
 
 
@@ -147,18 +147,20 @@ class API(object):
         'realtime': query.RealTimeQuery, 
     }
 
-    def __init__(self, account, endpoint):
+    def __init__(self, profile, endpoint):
         """
         Endpoint can be one of `ga` or `realtime`.
         """
         # various shortcuts
-        self.account = account
-        self.service = account.service
-        root = account.service.data()
+        self.profile = profile
+        self.account = account = profile.account
+        self.service = service = profile.account.service
+        root = service.data()
+        self.endpoint_type = endpoint
         self.endpoint = getattr(root, endpoint)()
         # query interface 
-        self.report_type = REPORT_TYPES[endpoint]
-        self.query = functools.partial(QUERY_TYPES[endpoint], account)
+        self.report_type = self.REPORT_TYPES[endpoint]
+        self.query = functools.partial(self.QUERY_TYPES[endpoint], self)
 
     @property
     @utils.memoize
@@ -172,7 +174,7 @@ class API(object):
             reportType=self.report_type
             )
         raw_columns = query.execute()['items']
-        hydrated_columns = [Column(item, self) for item in items]
+        hydrated_columns = [Column(item, self) for item in raw_columns]
         return addressable.List(hydrated_columns, 
             indices=['id', 'slug', 'name'], 
             unique=False, 
@@ -204,3 +206,6 @@ class API(object):
     @utils.memoize
     def goals(self):
         raise NotImplementedError()
+
+    def __repr__(self):
+        return '<googleanalytics.account.API object: {} endpoint>'.format(self.endpoint_type)
