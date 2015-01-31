@@ -1,7 +1,11 @@
 import re
 import functools
+import __builtin__
+
 import addressable
+from addressable import map, filter
 from dateutil.parser import parse as parse_date
+
 from .utils import identity, vectorize
 
 
@@ -29,7 +33,7 @@ def escape_chars(value, chars=',;'):
 def escape(method):
     @functools.wraps(method)
     def escaped_method(self, *values):
-        values = map(escape_chars, values)
+        values = __builtin__.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
 
@@ -123,6 +127,7 @@ class Segment(Column):
     def __init__(self, raw, account):
         self.raw = raw
         self.id = raw['segmentId']
+        self.report_type, self.slug = self.id.split('::')        
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']
@@ -150,13 +155,12 @@ class Goal(object):
 class ColumnList(addressable.List):
     COLUMN_TYPE = Column
 
-    def __init__(self, columns, unique=True):
-        indices = ('id', 'slug', 'name')
-        super(ColumnList, self).__init__(self, columns, 
-            indices=indices, 
-            unique=unique, 
-            insensitive=True, 
-            )
+    def __init__(self, columns, **options):
+        options['items'] = columns
+        options['name'] = self.COLUMN_TYPE.__class__.__name__
+        options['indices'] = ('id', 'name', 'slug')
+        options['insensitive'] = True
+        super(ColumnList, self).__init__(**options)
 
     def normalize(self, value):
         if isinstance(value, self.COLUMN_TYPE):

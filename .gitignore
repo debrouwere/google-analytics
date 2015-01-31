@@ -79,3 +79,6 @@ target/
 *.env
 !example.env
 !*.example.env
+
+# sandbox
+sandbox

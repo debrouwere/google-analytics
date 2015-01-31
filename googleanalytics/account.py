@@ -1,9 +1,11 @@
 import functools
+
 import addressable
+
 from . import utils
 from . import query
-from .columns import is_core, is_live, is_metric, is_dimension, is_supported, is_deprecated
-from .columns import Column, Segment
+from . import columns
+from .columns import Column, Segment, ColumnList, SegmentList
 
 
 class Account(object):
@@ -151,6 +153,7 @@ class API(object):
         """
         Endpoint can be one of `ga` or `realtime`.
         """
+        
         # various shortcuts
         self.profile = profile
         self.account = account = profile.account
@@ -158,6 +161,7 @@ class API(object):
         root = service.data()
         self.endpoint_type = endpoint
         self.endpoint = getattr(root, endpoint)()
+
         # query interface 
         self.report_type = self.REPORT_TYPES[endpoint]
         self.query = functools.partial(self.QUERY_TYPES[endpoint], self)
@@ -165,7 +169,7 @@ class API(object):
     @property
     @utils.memoize
     def columns(self):
-        return addressable.filter(is_supported, self.all_columns)
+        return addressable.filter(columns.is_supported, self.all_columns)
 
     @property
     @utils.memoize
@@ -175,11 +179,7 @@ class API(object):
             )
         raw_columns = query.execute()['items']
         hydrated_columns = [Column(item, self) for item in raw_columns]
-        return addressable.List(hydrated_columns, 
-            indices=['id', 'slug', 'name'], 
-            unique=False, 
-            insensitive=True, 
-            )
+        return ColumnList(hydrated_columns, unique=False)
 
     @property
     @utils.memoize
@@ -187,20 +187,17 @@ class API(object):
         query = self.service.management().segments().list()
         raw_segments = query.execute()['items']
         hydrated_segments = [Segment(raw, self) for raw in raw_segments]
-        return addressable.List(hydrated_segments, 
-            indices=['id', 'name'], 
-            insensitive=True, 
-            )
+        return SegmentList(hydrated_segments)
 
     @property
     @utils.memoize
     def metrics(self):
-        return addressable.filter(is_metric, self.columns)
+        return addressable.filter(columns.is_metric, self.columns)
 
     @property
     @utils.memoize
     def dimensions(self):
-        return addressable.filter(is_dimension, self.columns)
+        return addressable.filter(columns.is_dimension, self.columns)
 
     @property
     @utils.memoize

@@ -1,6 +1,8 @@
 from copy import deepcopy
 import collections
 import time
+from functools import partial
+
 import addressable
 import inspector
 
@@ -142,46 +144,15 @@ class Query(object):
         self._lock = time.time()
         return wait
 
+    # REFACTOR
     def _serialize_criterion(criterion):
         pattern = r'(?P<identifier>[\w:]+)((?P<operator>[\!\=\>\<\@\~]+)(?P<value>[\w:]+))?'
         match = re.match(pattern, criterion)
         identifier = match.group('identifier')
         operator = match.group('operator') or ''
         value = match.group('value') or ''
-        column = self._serialize_column(identifier)
+        column = self.api.all_columns.serialize(identifier)
         return column + operator + value
-
-    def _normalize_column(self, value):
-        if isinstance(value, Column):
-            return value
-        else:
-            return self.api.all_columns[value]
-
-    def _serialize_column(self, value):
-        return self._normalize_column(value).id
-
-    def _serialize_columns(self, values):
-        if not isinstance(values, (list, tuple)):
-            values = [values]
-
-        return [self._serialize_column(value) for value in values]
-
-    def _normalize_segment(self, value):
-        if isinstance(value, Segment):
-            return value
-        else:
-            return self.api.segments[value]
-    
-    def _serialize_segment(self, value):
-        return self._normalize_segment(value).id
-
-    def _serialize(self, obj):
-        if isinstance(obj, list):
-            return [self._serialize(el) for el in obj]
-        elif isinstance(obj, Column):
-            return obj.id
-        else:
-            return obj
 
     @property
     def endpoint(self):
@@ -203,12 +174,14 @@ class Query(object):
         leave any other kind of value alone.
         """
 
+        serialize = partial(self.api.all_columns.serialize, greedy=False)
+
         if key and value:
-            self.raw[key] = self._serialize(value)
+            self.raw[key] = serialize(value)
         elif key or kwargs:
             properties = key or kwargs
             for key, value in properties.items():
-                self.raw[key] = self._serialize(value)
+                self.raw[key] = serialize(value)
         else:
             raise ValueError(
                 "Query#set requires a key and value, a properties dictionary or keyword arguments.")
@@ -216,8 +189,10 @@ class Query(object):
         return self
 
     def _specify(self, metrics=[], dimensions=[]):
-        metrics = self._serialize_columns(metrics)
-        dimensions = self._serialize_columns(dimensions)
+        serialize = partial(self.api.all_columns.serialize, wrap=True)
+
+        metrics = serialize(metrics)
+        dimensions = serialize(dimensions)
         self.raw.setdefault('metrics', []).extend(metrics)
         self.raw.setdefault('dimensions', []).extend(dimensions)
 
@@ -665,7 +640,7 @@ class CoreQuery(Query):
         if type:
             value = "{type}::{value}".format(type=type, value=value)
         else:
-            value = self._serialize_segment(value)
+            value = self.api.segments.serialize(value)
 
         self.raw['segment'] = value
         return self
