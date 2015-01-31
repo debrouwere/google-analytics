@@ -90,6 +90,7 @@ class Report(object):
         headers = [header.name for header in self.headers]
         return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
 
+
 class Query(object):
     """
     **Warning:** potentially out of date information.
@@ -464,6 +465,7 @@ class CoreQuery(Query):
 
         [query]: https://developers.google.com/analytics/devguides/reporting/core/v3/reference#q_summary
         """
+
         start, stop = utils.daterange(start, stop, months, days)
 
         self.raw.update({

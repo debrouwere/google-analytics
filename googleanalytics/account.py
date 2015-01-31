@@ -130,15 +130,15 @@ class Profile(object):
         self.account = webproperty.account
         self.id = raw['id']
         self.name = raw['name']
-        self.core = API(self, 'ga')
-        self.realtime = API(self, 'realtime')
+        self.core = ReportingAPI(self, 'ga')
+        self.realtime = ReportingAPI(self, 'realtime')
 
     def __repr__(self):
         return "<googleanalytics.account.Profile object: {} ({})>".format(
             self.name, self.id)
 
 
-class API(object):
+class ReportingAPI(object):
     REPORT_TYPES = {
         'ga': 'ga', 
         'realtime': 'rt', 
@@ -205,4 +205,4 @@ class API(object):
         raise NotImplementedError()
 
     def __repr__(self):
-        return '<googleanalytics.account.API object: {} endpoint>'.format(self.endpoint_type)
+        return '<googleanalytics.account.ReportingAPI object: {} endpoint>'.format(self.endpoint_type)
