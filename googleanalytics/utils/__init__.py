@@ -4,7 +4,7 @@ import textwrap
 from dateutil.parser import parse as parse_date
 from dateutil.relativedelta import relativedelta
 
-from .functional import memoize, immutable, noop, soak
+from .functional import memoize, immutable, noop, soak, vectorize
 from .server import single_serve
 
 

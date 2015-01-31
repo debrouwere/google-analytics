@@ -8,6 +8,7 @@ from .columns import Column, Segment
 from . import utils
 from . import errors
 
+
 class Report(object):
     def __init__(self, raw, query):
         self.raw = []
