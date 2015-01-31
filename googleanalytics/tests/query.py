@@ -63,7 +63,7 @@ class TestQuerying(TestQueryingBase):
         a = self.query('pageviews')
         b = self.query('Pageviews')
         c = self.query('ga:pageviews')
-        d = self.query(self.account.columns['pageviews'])
+        d = self.query(self.profile.core.columns['pageviews'])
 
         self.assertEqual(a.raw, b.raw)
         self.assertEqual(b.raw, c.raw)
@@ -136,7 +136,7 @@ class TestQuerying(TestQueryingBase):
         sorted_report = q \
             .sort('pageviews').get()
         inverse_sorted_report = q \
-            .sort(-self.account.columns['pageviews']).get()
+            .sort(-self.profile.core.columns['pageviews']).get()
 
         self.assertEqual(inverse_sorted_report.queries[0].raw['sort'], '-ga:pageviews')
         self.assertEqual(

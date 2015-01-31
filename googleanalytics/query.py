@@ -170,7 +170,7 @@ class Query(object):
         if isinstance(value, Segment):
             return value
         else:
-            return self.account.segments[value]
+            return self.api.segments[value]
     
     def _serialize_segment(self, value):
         return self._normalize_segment(value).id
@@ -313,7 +313,7 @@ class Query(object):
                 identifier = column.id
             elif isinstance(column, basestring):
                 ascending = column.startswith('-')
-                identifier = self.account.columns[column.lstrip('-')].id
+                identifier = self.api.all_columns[column.lstrip('-')].id
             else:
                 raise ValueError()
 
