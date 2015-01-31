@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 """
 Convenience functions for authenticating with Google
 and asking for authorization with Google, with 

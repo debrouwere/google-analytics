@@ -1,0 +1,288 @@
+- id: rt:activeUsers
+  attributes:
+    uiName: Active Users
+    group: user
+    description: The number of users interacting with the property right now.
+    type: metric
+    dataType: INTEGER
+- id: rt:goalXXValue
+  attributes:
+    uiName: Goal XX Value
+    group: goal conversions
+    description: |
+        The total numeric value for the requested goal number, where XX is a number between 1 and 20.
+    type: metric
+    dataType: CURRENCY
+- id: rt:goalValueAll
+  attributes:
+    uiName: Goal Value
+    group: goal conversions
+    description: |
+        The total numeric value for all goals defined for your view (profile).
+    type: metric
+    dataType: CURRENCY
+- id: rt:goalXXCompletions
+  attributes:
+    uiName: Goal XX Completions
+    group: goal conversions
+    description: |
+        The total number of completions for the requested goal number, where XX is a number between 1 and 20.
+    type: metric
+    dataType: INTEGER
+- id: rt:goalCompletionsAll
+  attributes:
+    uiName: Goal Completions
+    group: goal conversions
+    description: |
+        The total number of completions for all goals defined for your view (profile).
+    type: metric
+    dataType: INTEGER
+- id: rt:pageviews
+  attributes:
+    uiName: Pageviews
+    group: page tracking
+    description: |
+        The total number of page views.
+    type: metric
+    dataType: INTEGER
+- id: rt:screenViews
+  attributes:
+    uiName: Screen Views
+    group: app tracking
+    description: |
+        The total number of screen views.
+    type: metric
+    dataType: INTEGER
+- id: rt:totalEvents
+  attributes:
+    uiName: Total Events
+    group: event tracking
+    description: |
+        The total number of events for the view (profile), across all categories.
+    type: metric
+    dataType: INTEGER
+- id: rt:userType
+  attributes:
+    uiName: User Type
+    group: user
+    description: A boolean indicating if a user is new or returning. Possible values are `new` and `returning`.
+    type: dimension
+    dataType: STRING
+- id: rt:minutesAgo
+  attributes:
+    uiName: Minutes Ago
+    group: time
+    description: The number of minutes ago a hit occurred.
+    type: dimension
+    dataType: INTEGER
+- id: rt:referralPath
+  attributes:
+    uiName: Referral Path
+    group: traffic sources
+    description: |
+        The path of the referring URL (e.g. document.referrer). If someone places a link to your property on their website, this element contains the path of the page that contains the referring link. This value is only set when `rt:medium=referral`.
+    type: dimension
+    dataType: STRING
+- id: rt:campaign
+  attributes:
+    uiName: Campaign
+    group: traffic sources
+    description: |
+        When using manual campaign tracking, the value of the `utm_campaign` campaign tracking parameter. When using AdWords autotagging, the name(s) of the online ad campaign that you use for your property. Otherwise the value `(not set)` is used.
+    type: dimension
+    dataType: STRING
+- id: rt:source
+  attributes:
+    uiName: Source
+    group: traffic sources
+    description: |
+        The source of referrals to your property. When using manual campaign tracking, the value of the `utm_source` campaign tracking parameter. When using AdWords autotagging, the value is `google`. Otherwise the domain of the source referring the user to your property (e.g. `document.referrer`). The value may also contain a port address. If the user arrived without a referrer, the value is `(direct)`.
+    type: dimension
+    dataType: STRING
+- id: rt:medium
+  attributes:
+    uiName: Medium
+    group: traffic sources
+    description: |
+        The type of referrals to your property. When using manual campaign tracking, the value of the `utm_medium` campaign tracking parameter. When using AdWords autotagging, the value is `ppc`. If the user comes from a search engine detected by Google Analytics, the value is `organic`. If the referrer is not a search engine, the value is `referral`. If the user came directly to the property, and `document.referrer` is empty, the value is `(direct)`.
+    type: dimension
+    dataType: STRING
+- id: rt:trafficType
+  attributes:
+    uiName: Traffic Type
+    group: traffic sources
+    description: |
+        This dimension is similar to `rt:medium` for constant values such as `organic`, `referral`, `direct`, etc. It is different for custom referral types. As an example, if you add the `utm_campaign` parameter to your URL with value *email*, `rt:medium` will be *email* but `rt:trafficType` will be *custom*.
+    type: dimension
+    dataType: STRING
+- id: rt:keyword
+  attributes:
+    uiName: Keyword
+    group: traffic sources
+    description: |
+        When using manual campaign tracking, the value of the `utm_term` campaign tracking parameter. When using AdWords autotagging or if a user used organic search to reach your property, the keywords used by users to reach your property. Otherwise the value is `(not set)`.
+    type: dimension
+    dataType: STRING
+- id: rt:goalId
+  attributes:
+    uiName: Goal ID
+    group: goal conversions
+    description: A string. Corresponds to the goal ID.
+    type: dimension
+    dataType: STRING
+- id: rt:browser
+  attributes:
+    uiName: Browser
+    group: platform / device
+    description: The names of browsers used by users to your property.
+    type: dimension
+    dataType: STRING
+- id: rt:browserVersion
+  attributes:
+    uiName: Browser Version
+    group: platform / device
+    description: The browser versions used by users to your property.
+    type: dimension
+    dataType: STRING
+- id: rt:operatingSystem
+  attributes:
+    uiName: Operating System
+    group: platform / device
+    description: The operating system used by users to your property.
+    type: dimension
+    dataType: STRING
+- id: rt:operatingSystemVersion
+  attributes:
+    uiName: Operating System Version
+    group: platform / device
+    description: The version of the operating system used by users to your property
+    type: dimension
+    dataType: STRING
+- id: rt:deviceCategory
+  attributes:
+    uiName: Device Category
+    group: platform / device
+    description: |
+        The type of device: `Desktop`, `Tablet`, or `Mobile`.
+    type: dimension
+    dataType: STRING
+- id: rt:mobileDeviceBranding
+  attributes:
+    uiName: Mobile Device Branding
+    group: platform / device
+    description: |
+        Mobile manufacturer or branded name (e.g: Samsung, HTC, Verizon, T-Mobile).
+    type: dimension
+    dataType: STRING
+- id: rt:mobileDeviceModel
+  attributes:
+    uiName: Mobile Device Model
+    group: platform / device
+    description: |
+        Mobile device model (e.g.: Nexus S)
+    type: dimension
+    dataType: STRING
+- id: rt:country
+  attributes:
+    uiName: Country
+    group: geo
+    description: |
+        The countries of website users, derived from IP addresses.
+    type: dimension
+    dataType: STRING
+- id: rt:region
+  attributes:
+    uiName: Region
+    group: geo
+    description: |
+        The region of users to your property, derived from IP addresses. In the U.S., a region is a state, such as `New York`.
+    type: dimension
+    dataType: STRING
+- id: rt:city
+  attributes:
+    uiName: City
+    group: geo
+    description: |
+        The cities of users, derived from IP addresses.
+    type: dimension
+    dataType: STRING
+- id: rt:latitude
+  attributes:
+    uiName: Latitude
+    group: geo
+    description: |
+        The approximate latitude of the user's city. Derived from IP address. Locations north of the equator are represented by positive values and locations south of the equator by negative values.
+    type: dimension
+    dataType: STRING
+- id: rt:longitude
+  attributes:
+    uiName: Longitude
+    group: geo
+    description: |
+        The approximate longitude of the user's city. Derived from IP address. Locations east of the prime meridian are represented by positive values and locations west of the prime meridian by negative values.
+    type: dimension
+    dataType: STRING
+- id: rt:pagePath
+  attributes:
+    uiName: Page Path
+    group: page tracking
+    description: |
+        A page on your property specified by path and/or query parameters.
+    type: dimension
+    dataType: STRING
+- id: rt:pageTitle
+  attributes:
+    uiName: Page Title
+    group: page tracking
+    description: |
+        The title of a page. Keep in mind that multiple pages might have the same page title.
+    type: dimension
+    dataType: STRING
+- id: rt:appName
+  attributes:
+    uiName: App Name
+    group: app tracking
+    description: |
+        The name of the application.
+    type: dimension
+    dataType: STRING
+- id: rt:appVersion
+  attributes:
+    uiName: App Version
+    group: app tracking
+    description: |
+        The version of the application.
+    type: dimension
+    dataType: STRING
+- id: rt:screenName
+  attributes:
+    uiName: Screen Name
+    group: app tracking
+    description: |
+        The name of a screen.
+    type: dimension
+    dataType: STRING
+- id: rt:eventAction
+  attributes:
+    uiName: Event Action
+    group: event tracking
+    description: |
+        The action of the event.
+    type: dimension
+    dataType: STRING
+- id: rt:eventCategory
+  attributes:
+    uiName: Event Category
+    group: event tracking
+    description: |
+        The category of the event.
+    type: dimension
+    dataType: STRING
+- id: rt:eventLabel
+  attributes:
+    uiName: Event Label
+    group: event tracking
+    description: |
+        The label of the event.
+    type: dimension
+    dataType: STRING

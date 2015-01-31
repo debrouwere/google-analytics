@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import re
 import functools
 import __builtin__
@@ -11,6 +13,7 @@ from .utils import identity, vectorize
 
 TODO = identity
 
+# TODO: percent, time, currency
 TYPES = {
     'STRING': unicode, 
     'INTEGER': int, 
@@ -52,7 +55,7 @@ class Column(object):
         self.type = attributes['type'].lower()
         # TODO: evaluate if we can improve casting
         self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or identity
-        self.is_deprecated = attributes['status'] == 'DEPRECATED'
+        self.is_deprecated = attributes.get('status', 'ACTIVE') == 'DEPRECATED'
         self.is_allowed_in_segments = 'allowedInSegments' in attributes
 
     @escape

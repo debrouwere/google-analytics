@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from copy import deepcopy
 import collections
 import time
@@ -55,11 +57,17 @@ class Report(object):
 
     @property
     def value(self):
-        return self.first[0]
+        if len(self.headers) == 1:
+            return self.first[0]
+        else:
+            raise ValueError("This report contains multiple columns. Please use `rows`, `first`, `last` or a column name.")
 
     @property
     def values(self):
-        return [row[0] for row in self.rows]
+        if len(self.headers) == 1:
+            return [row[0] for row in self.rows]
+        else:
+            raise ValueError("This report contains multiple columns. Please use `rows`, `first`, `last` or a column name.")
 
     def serialize(self):
         serialized = []
@@ -93,15 +101,13 @@ class Report(object):
 
 class Query(object):
     """
-    **Warning:** potentially out of date information.
-
     Return a query for certain metrics and dimensions.
 
     ```python
     # pageviews (metric) as a function of geographical region
-    profile.query('pageviews', 'region')
+    profile.core.query('pageviews', 'region')
     # pageviews as a function of browser
-    profile.query(['pageviews'], ['browser'])
+    profile.core.query(['pageviews'], ['browser'])
     ```
 
     The returned query can then be further refined using 
@@ -115,7 +121,7 @@ class Query(object):
     Metrics and dimensions specified as a string are not case-sensitive.
 
     ```python
-    profile.query
+    profile.query('PAGEVIEWS')
     ```
 
     If specifying only a single metric or dimension, you can 
@@ -313,7 +319,11 @@ class Query(object):
     def execute(self):
         raw = deepcopy(self.raw)
         raw['metrics'] = ','.join(self.raw['metrics'])
-        raw['dimensions'] = ','.join(self.raw['dimensions'])
+        
+        if len(raw['dimensions']):
+            raw['dimensions'] = ','.join(self.raw['dimensions'])
+        else:
+            raw['dimensions'] = None
 
         try:
             self._wait()
@@ -662,10 +672,10 @@ class CoreQuery(Query):
         """
         Run the query and return a `Report`.
 
-        Execute transparently handles paginated results, so even for results that 
+        This method transparently handles paginated results, so even for results that 
         are larger than the maximum amount of rows the Google Analytics API will 
         return in a single request, or larger than the amount of rows as specified 
-        through `CoreQuery#step`,  execute will leaf through all pages,  
+        through `CoreQuery#step`, `get` will leaf through all pages,  
         concatenate the results and produce a single Report instance.
         """
 
@@ -692,11 +702,11 @@ class CoreQuery(Query):
 
 class RealTimeQuery(Query):
     """
-    A query against the [Google Analytics Live API][live].
+    A query against the [Google Analytics Real Time API][realtime].
 
-    **Note:** alpha quality, under active development.
+    **Note:** brand new! Please test and submit any issues to GitHub.
 
-    [live]: https://developers.google.com/analytics/devguides/reporting/realtime/v3/reference/data/realtime#resource
+    [realtime]: https://developers.google.com/analytics/devguides/reporting/realtime/v3/reference/data/realtime#resource
     """
 
     @property
@@ -737,7 +747,9 @@ def describe(profile, description):
     Mostly useful if you'd like to put your queries
     in a file, rather than in Python code.
     """
-    return refine(profile.query(), description)
+    api_type = description.get('type', 'core')
+    api = getattr(profile, api_type)
+    return refine(api.query(), description)
 
 def refine(query, description):
     """

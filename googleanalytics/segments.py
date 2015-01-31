@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 """
 Chaining for filters and segments.
 """

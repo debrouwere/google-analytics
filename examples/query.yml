@@ -1,5 +1,7 @@
 identity: fusion
 
+type: core
+
 scope:
     account: '46206777'
     webproperty: 'UA-46206777-1'

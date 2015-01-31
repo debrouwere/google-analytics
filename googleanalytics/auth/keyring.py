@@ -1,9 +1,13 @@
+# encoding: utf-8
+
 from __future__ import absolute_import
 
 import json
 import keyring
 
+
 DOMAIN = 'Google Analytics API'
+
 
 def get(name):
     secrets = keyring.get_password(DOMAIN, name)

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from copy import copy
 import googleanalytics as ga
 

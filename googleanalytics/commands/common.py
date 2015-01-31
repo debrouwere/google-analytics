@@ -1,6 +1,10 @@
+# encoding: utf-8
+
 import click
 import inspector
+
 import googleanalytics as ga
+
 
 @click.group()
 def cli():

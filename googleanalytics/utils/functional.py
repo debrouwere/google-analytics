@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import copy
 import functools
 import inspect

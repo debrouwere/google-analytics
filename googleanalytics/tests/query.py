@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import googleanalytics as ga
 import os
 import unittest

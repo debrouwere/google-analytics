@@ -1,10 +1,15 @@
+# encoding: utf-8
+
 import json
 import webbrowser
+
 import addressable
 from oauth2client import client
 from apiclient import discovery
+
 from googleanalytics import utils, account
-from credentials import Credentials, normalize
+from .credentials import Credentials, normalize
+
 
 class Flow(client.OAuth2WebServerFlow):
     def __init__(self, client_id, client_secret, redirect_uri):

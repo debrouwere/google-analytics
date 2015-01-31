@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import os
 from copy import copy
 import httplib2
@@ -43,6 +45,7 @@ def from_prompt(**params):
         prompted['client_secret'] = raw_input('Client secret: ')
 
     return prompted
+
 
 class Credentials(object):
     STRATEGIES = {
@@ -173,7 +176,7 @@ class Credentials(object):
 def normalize(fn):
     @inspector.changes(fn)
     def normalized_fn(client_id=None, client_secret=None, 
-        access_token=None, refresh_token=None, identity=None):
+            access_token=None, refresh_token=None, identity=None):
         
         if isinstance(client_id, Credentials):
             credentials = client_id

@@ -1,3 +1,6 @@
+# encoding: utf-8
+
+import os
 import copy
 import datetime
 import textwrap
@@ -111,3 +114,8 @@ def translate(d, mapping):
 
 def whitelist(d, allowed):
     return {k: v for k, v in d.items() if k in allowed}
+
+
+def here(*segments):
+    current = os.path.dirname(__file__)
+    return os.path.realpath(os.path.join(current, '..', *segments))

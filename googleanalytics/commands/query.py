@@ -1,6 +1,10 @@
+# encoding: utf-8
+
 import json
 import yaml
+
 import click
+
 import googleanalytics as ga
 from .common import authenticated, cli
 
@@ -25,7 +29,7 @@ def query(identity=None, account=None, webproperty=None, profile=None, blueprint
 
         reports = []
         for query in queries:
-            report = query.execute()
+            report = query.get()
             reports.append({
                 'title': query.title, 
                 'query': query.raw, 

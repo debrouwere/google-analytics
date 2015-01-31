@@ -1,7 +1,12 @@
+# encoding: utf-8
+
 import json
+
 import click
+
 import googleanalytics as ga
-from common import authenticated, cli
+from .common import authenticated, cli
+
 
 @cli.command()
 @click.option('-s', '--show', type=click.Choice(['pairs', 'json']))

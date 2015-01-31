@@ -1,5 +1,8 @@
+# encoding: utf-8
+
 import functools
 
+import yaml
 import addressable
 
 from . import utils
@@ -130,8 +133,8 @@ class Profile(object):
         self.account = webproperty.account
         self.id = raw['id']
         self.name = raw['name']
-        self.core = ReportingAPI(self, 'ga')
-        self.realtime = ReportingAPI(self, 'realtime')
+        self.core = CoreReportingAPI(self)
+        self.realtime = RealTimeReportingAPI(self)
 
     def __repr__(self):
         return "<googleanalytics.account.Profile object: {} ({})>".format(
@@ -149,7 +152,7 @@ class ReportingAPI(object):
         'realtime': query.RealTimeQuery, 
     }
 
-    def __init__(self, profile, endpoint):
+    def __init__(self, endpoint, profile):
         """
         Endpoint can be one of `ga` or `realtime`.
         """
@@ -205,4 +208,24 @@ class ReportingAPI(object):
         raise NotImplementedError()
 
     def __repr__(self):
-        return '<googleanalytics.account.ReportingAPI object: {} endpoint>'.format(self.endpoint_type)
+        return '<googleanalytics.account.{} object>'.format(self.__class__.__name__)
+
+
+class CoreReportingAPI(ReportingAPI):
+    def __init__(self, profile):
+        super(CoreReportingAPI, self).__init__('ga', profile)
+
+
+class RealTimeReportingAPI(ReportingAPI):
+    def __init__(self, profile):
+        super(RealTimeReportingAPI, self).__init__('realtime', profile)
+
+    # in principle, we should be able to reuse everything from the ReportingAPI
+    # base class, but the Real Time Reporting API is still in beta and some 
+    # things – like a metadata endpoint – are missing.
+    @property
+    @utils.memoize
+    def all_columns(self):
+        raw_columns = yaml.load(open(utils.here('realtime.yml')))
+        hydrated_columns = [Column(item, self) for item in raw_columns]
+        return ColumnList(hydrated_columns)

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 """
 These unit tests are somewhat limited in scope because they need 
 to work with any Google Analytics data. Therefore, we mainly test

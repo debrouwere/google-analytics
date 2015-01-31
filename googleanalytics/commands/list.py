@@ -1,5 +1,9 @@
+# encoding: utf-8
+
 import re
+
 import click
+
 import googleanalytics as ga
 from .common import authenticated, cli
 

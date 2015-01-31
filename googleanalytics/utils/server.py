@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 def single_serve(message=None, port=5000):
     import logging
     from flask import Flask, Response, request
