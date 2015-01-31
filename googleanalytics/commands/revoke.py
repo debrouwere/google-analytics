@@ -1,5 +1,5 @@
 import googleanalytics as ga
-from common import authenticated, cli
+from .common import authenticated, cli
 
 @cli.command()
 @authenticated

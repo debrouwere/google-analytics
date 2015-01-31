@@ -3,12 +3,10 @@ import collections
 import time
 import addressable
 import inspector
-import utils
 
-import account
-import columns
-import errors
-
+from .columns import Column, Segment
+from . import utils
+from . import errors
 
 class Report(object):
     def __init__(self, raw, query):
@@ -42,7 +40,7 @@ class Report(object):
         self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
         self.total = raw['totalsForAllResults'].values()[0]
-        # print self.totals
+        # print(self.totals)
 
     @property
     def first(self):
@@ -133,7 +131,7 @@ class Query(object):
         return column + operator + value
 
     def _normalize_column(self, value):
-        if isinstance(value, account.Column):
+        if isinstance(value, Column):
             return value
         else:
             return self.account.columns[value]
@@ -148,7 +146,7 @@ class Query(object):
         return [self._serialize_column(value) for value in values]
 
     def _normalize_segment(self, value):
-        if isinstance(value, account.Segment):
+        if isinstance(value, Segment):
             return value
         else:
             return self.account.segments[value]
@@ -159,7 +157,7 @@ class Query(object):
     def _serialize(self, obj):
         if isinstance(obj, list):
             return [self._serialize(el) for el in obj]
-        elif isinstance(obj, account.Column):
+        elif isinstance(obj, Column):
             return obj.id
         else:
             return obj
@@ -285,7 +283,7 @@ class Query(object):
         sorts = []
 
         for column in columns:          
-            if isinstance(column, account.Column):
+            if isinstance(column, Column):
                 ascending = False
                 identifier = column.id
             elif isinstance(column, basestring):

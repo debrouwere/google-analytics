@@ -1,2 +1,2 @@
-import authorize, common, list, query
-from common import cli
+from . import authorize, common, list, query
+from .common import cli

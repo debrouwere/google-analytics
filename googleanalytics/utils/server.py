@@ -14,7 +14,7 @@ def single_serve(message=None, port=5000):
         request.environ.get('werkzeug.server.shutdown')()
         captured.update(dict(request.args.items()))
         if message:
-            print message
+            print(message)
         return Response(message, mimetype='text/plain')
 
     app.run(port=port)
