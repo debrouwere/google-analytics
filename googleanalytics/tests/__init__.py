@@ -17,4 +17,4 @@ at least one Google Analytics domain set up.
 import googleanalytics as ga
 import unittest
 import datetime
-import meta, query, experimental
+from . import meta, query, experimental

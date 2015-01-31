@@ -12,8 +12,8 @@ def authorize(identity, accounts, show=False):
     if show:
         if show == 'pairs':
             for key, value in credentials.serialize().items():
-                print key, '=', value
+                print(key, '=', value)
         else:
-            print json.dumps(credentials.serialize(), indent=4)
+            print(json.dumps(credentials.serialize(), indent=4))
 
     return credentials

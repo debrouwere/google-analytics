@@ -1,11 +1,16 @@
 import googleanalytics as ga
+import os
 import unittest
 import datetime
 
 
 class TestQueryingBase(unittest.TestCase):
     def setUp(self):
-        accounts = ga.authenticate(identity='sandbox')
+        accounts = ga.authenticate(
+            client_id=os.environ['GOOGLE_ANALYTICS_CLIENT_ID'], 
+            client_secret=os.environ['GOOGLE_ANALYTICS_CLIENT_SECRET'], 
+            refresh_token=os.environ['GOOGLE_ANALYTICS_REFRESH_TOKEN'], 
+            )
         if not len(accounts):
             raise Exception("Cannot proceed with unit testing: \
                 the authorized Google account does not use Google Analytics.")

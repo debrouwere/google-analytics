@@ -1,9 +1,9 @@
 import functools
 import addressable
-import utils
-from columns import Column, Segment
-from columns import is_core, is_live, is_metric, is_dimension, is_supported, is_deprecated
-import query
+from . import utils
+from . import query
+from .columns import is_core, is_live, is_metric, is_dimension, is_supported, is_deprecated
+from .columns import Column, Segment
 
 
 class Account(object):
@@ -22,7 +22,7 @@ class Account(object):
     accounts = ga.authenticate()
     profile = accounts['debrouwere.org'].webproperties['UA-12933299-1'].profiles['debrouwere.org']
     report = profile.query('pageviews').range('2014-10-01', '2014-10-31').execute()
-    print report['pageviews']
+    print(report['pageviews'])
     ```
     """
 

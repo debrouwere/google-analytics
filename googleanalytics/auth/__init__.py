@@ -39,11 +39,12 @@ def find(**kwargs):
 def identity(name):
     return find(identity=name)
 
-def authenticate(client_id=None, client_secret=None, 
-    access_token=None, refresh_token=None, 
-    account=None, webproperty=None, profile=None, 
-    identity=None, prefix=None, suffix=None, 
-    interactive=False, save=False):
+def authenticate(
+        client_id=None, client_secret=None, 
+        access_token=None, refresh_token=None, 
+        account=None, webproperty=None, profile=None, 
+        identity=None, prefix=None, suffix=None, 
+        interactive=False, save=False):
     
     credentials = oauth.Credentials.find(
         valid=True,
@@ -58,14 +59,17 @@ def authenticate(client_id=None, client_secret=None,
         )
 
     if credentials.incomplete:
-        credentials = authorize(
-            client_id=credentials.client_id, 
-            client_secret=credentials.client_secret, 
-            save=save, 
-            identity=credentials.identity, 
-            prefix=prefix, 
-            suffix=suffix, 
-            )
+        if interactive:
+            credentials = authorize(
+                client_id=credentials.client_id, 
+                client_secret=credentials.client_secret, 
+                save=save, 
+                identity=credentials.identity, 
+                prefix=prefix, 
+                suffix=suffix, 
+                )
+        else:
+            raise KeyError("Cannot authenticate: enable interactive authorization or pass a token.")
     
     accounts = oauth.authenticate(credentials)
     scope = navigate(accounts, account=account, webproperty=webproperty, profile=profile)

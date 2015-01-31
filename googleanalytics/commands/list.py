@@ -1,7 +1,7 @@
 import re
 import click
 import googleanalytics as ga
-from common import authenticated, cli
+from .common import authenticated, cli
 
 
 def print_list(l):

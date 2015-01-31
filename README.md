@@ -1,3 +1,7 @@
+# Google Analytics for Python and the command-line
+
+[![Build Status](https://travis-ci.org/debrouwere/google-analytics.svg)](https://travis-ci.org/debrouwere/google-analytics)
+
 `google-analytics` takes the pain out of working with the Google Analytics API. It is written in Python but there's also a command-line interface.
 
 (The goal is for the command-line interface to have feature parity with the Python interface. We're working on it.)

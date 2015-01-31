@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.7"
+branches:
+    except:
+        - realtime
+install: pip install googleanalytics
+script: python setup.py test
+sudo: false
