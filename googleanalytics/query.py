@@ -27,12 +27,16 @@ class Report(object):
         self.row_cls = collections.namedtuple('Row', slugs)
         self.headers = addressable.List(headers, 
             indices=registry.indexed_on, insensitive=True)
+        self.metrics = set()
+        self.dimensions = set()
         self.rows = []
         self.append(raw, query)
 
     def append(self, raw, query):
         self.raw.append(raw)
         self.queries.append(query)
+        self.metrics.update(query.raw['metrics'])
+        self.dimensions.update(query.raw.get('dimensions', []))
         self.is_complete = not 'nextLink' in raw
 
         casters = [column.cast for column in self.headers]
@@ -60,17 +64,19 @@ class Report(object):
 
     @property
     def value(self):
-        if len(self.headers) == 1:
-            return self.first[0]
+        if len(self.metrics) == 1 and len(self.rows) == 1:
+            metric = list(self.metrics).pop()
+            return getattr(self.first, metric)
         else:
-            raise ValueError("This report contains multiple columns. Please use `rows`, `first`, `last` or a column name.")
+            raise ValueError("This report contains multiple rows or metrics. Please use `rows`, `first`, `last` or a column name.")
 
     @property
     def values(self):
-        if len(self.headers) == 1:
-            return [row[0] for row in self.rows]
+        if len(self.metrics) == 1:
+            metric = list(self.metrics).pop()
+            return self[metric]
         else:
-            raise ValueError("This report contains multiple columns. Please use `rows`, `first`, `last` or a column name.")
+            raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
 
     def serialize(self):
         serialized = []
@@ -97,6 +103,7 @@ class Report(object):
     # TODO: would be cool if we could split up headers 
     # into metrics vs. dimensions so we could say 
     # "pageviews by day, browser"
+    # (also see `title` and `description` on query objects)
     def __repr__(self):
         headers = [header.name for header in self.headers]
         return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
