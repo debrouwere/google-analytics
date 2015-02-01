@@ -59,7 +59,7 @@ class Account(object):
         raw_properties = self.service.management().webproperties().list(
             accountId=self.id).execute()['items']
         _webproperties = [WebProperty(raw, self) for raw in raw_properties]
-        return addressable.List(_webproperties, indices=['id', 'name'])
+        return addressable.List(_webproperties, indices=['id', 'name'], insensitive=True)
 
     @property
     def query(self, *vargs, **kwargs):
@@ -105,7 +105,7 @@ class WebProperty(object):
             accountId=self.account.id,
             webPropertyId=self.id).execute()['items']
         profiles = [Profile(raw, self) for raw in raw_profiles]
-        return addressable.List(profiles, indices=['id', 'name'])        
+        return addressable.List(profiles, indices=['id', 'name'], insensitive=True)        
 
     def query(self, *vargs, **kwargs):
         """
