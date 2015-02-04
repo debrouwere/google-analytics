@@ -108,7 +108,7 @@ profile = webproperty.profiles[0]
 print profile.core.metrics
 print profile.realtime.metrics
 print profile.core.dimensions
-print profile.realtime.metrics
+print profile.realtime.dimensions
 # call metrics and other columns by their name, their full id
 # or their slug (the id without the `ga:` prefix)
 print profile.core.metrics['pageviews'] == profile.core.metrics['ga:pageviews']

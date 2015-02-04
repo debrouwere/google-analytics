@@ -327,8 +327,7 @@ class Query(object):
         object and the `all` and `any` functions. """
         self.raw['filters'] = value
 
-
-    def execute(self):
+    def build(self):
         raw = deepcopy(self.raw)
         raw['metrics'] = ','.join(self.raw['metrics'])
         
@@ -336,6 +335,11 @@ class Query(object):
             raw['dimensions'] = ','.join(self.raw['dimensions'])
         else:
             raw['dimensions'] = None
+
+        return raw
+
+    def execute(self):
+        raw = self.build()
 
         try:
             self._wait()
