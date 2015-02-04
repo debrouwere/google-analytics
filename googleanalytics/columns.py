@@ -42,21 +42,57 @@ def escape(method):
 
 
 class Column(object):
-    def __init__(self, raw, account):
-        attributes = raw['attributes']
-        self.raw = raw
-        self.account = account
-        self.id = raw['id']
+    @classmethod
+    def from_metadata(cls, metadata):
+        attributes = metadata['attributes']
+        data_format = DIMENSIONS.get(metadata['id']) or TYPES.get(attributes['dataType']) or identity
+        is_deprecated = attributes.get('status', 'ACTIVE') == 'DEPRECATED'
+        is_allowed_in_segments = 'allowedInSegments' in attributes
+        column = Column(metadata['id'], 
+            column_type=attributes['type'].lower(), 
+            format=data_format, 
+            attributes=attributes, 
+            deprecated=is_deprecated, 
+            allowed_in_segments=is_allowed_in_segments, 
+            )
+        return column.expand()
+
+    def __init__(self, column_id, column_type, format=unicode, attributes={}, 
+            deprecated=False, allowed_in_segments=True):
+        self.account = None
+        self.id = column_id
         self.report_type, self.slug = self.id.split(':')
+        self.base_id, self.index = re.match(r'^(.*?)(\d{1,2})?$', self.slug).groups()
         self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
-        self.name = attributes['uiName']
-        self.group = attributes['group']
-        self.description = attributes['description']
-        self.type = attributes['type'].lower()
+        self.attributes = attributes
+        self.name = attributes.get('uiName', column_id).replace('XX', str(self.index))
+        self.group = attributes.get('group')
+        self.description = attributes.get('description')
+        self.type = column_type
         # TODO: evaluate if we can improve casting
-        self.cast = DIMENSIONS.get(self.id) or TYPES.get(attributes['dataType']) or identity
-        self.is_deprecated = attributes.get('status', 'ACTIVE') == 'DEPRECATED'
-        self.is_allowed_in_segments = 'allowedInSegments' in attributes
+        self.cast = format
+        self.is_deprecated = deprecated
+        self.is_allowed_in_segments = allowed_in_segments
+
+    def link(self, account):
+        self.account = account
+
+    def expand(self):
+        columns = []
+        if self.id.endswith('XX'):
+            for i in range(1, 21):
+                column = Column(self.id.replace('XX', str(i)), 
+                    column_type=self.type, 
+                    format=self.cast, 
+                    attributes=self.attributes, 
+                    deprecated=self.is_deprecated, 
+                    allowed_in_segments=self.is_allowed_in_segments, 
+                    )         
+                columns.append(column)   
+        else:
+            columns = [self]
+
+        return columns
 
     @escape
     def eq(self, value):

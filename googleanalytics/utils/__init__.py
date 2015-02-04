@@ -4,6 +4,7 @@ import os
 import copy
 import datetime
 import textwrap
+import operator
 from dateutil.parser import parse as parse_date
 from dateutil.relativedelta import relativedelta
 
@@ -16,6 +17,10 @@ def simplify(value):
         return value.isoformat()
     else:
         return value
+
+
+def flatten(l):
+    return reduce(operator.add, l)
 
 
 def date(obj):

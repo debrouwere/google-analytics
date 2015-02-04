@@ -184,7 +184,7 @@ class ReportingAPI(object):
             reportType=self.report_type
             )
         raw_columns = query.execute()['items']
-        hydrated_columns = [Column(item, self) for item in raw_columns]
+        hydrated_columns = utils.flatten(map(Column.from_metadata, raw_columns))
         return ColumnList(hydrated_columns, unique=False)
 
     @property
