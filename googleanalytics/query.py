@@ -64,16 +64,16 @@ class Report(object):
 
     @property
     def value(self):
-        if len(self.metrics) == 1 and len(self.rows) == 1:
-            metric = list(self.metrics).pop()
-            return getattr(self.first, metric)
+        if len(self.rows) == 1:
+            return self.values[0]
         else:
             raise ValueError("This report contains multiple rows or metrics. Please use `rows`, `first`, `last` or a column name.")
 
     @property
     def values(self):
         if len(self.metrics) == 1:
-            metric = list(self.metrics).pop()
+            raw_metric = list(self.metrics).pop()
+            metric = self.headers[raw_metric]
             return self[metric]
         else:
             raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
@@ -89,6 +89,8 @@ class Report(object):
 
     def __getitem__(self, key):
         try:
+            if isinstance(key, Column):
+                key = key.slug
             i = self.headers.index(key)
             return [row[i] for row in self.rows]
         except ValueError:
@@ -191,7 +193,7 @@ class Query(object):
         leave any other kind of value alone.
         """
 
-        serialize = partial(self.api.all_columns.serialize, greedy=False)
+        serialize = partial(self.api.columns.serialize, greedy=False)
 
         if key and value:
             self.raw[key] = serialize(value)
@@ -206,7 +208,7 @@ class Query(object):
         return self
 
     def _specify(self, metrics=[], dimensions=[]):
-        serialize = partial(self.api.all_columns.serialize, wrap=True)
+        serialize = partial(self.api.columns.serialize, wrap=True)
 
         metrics = serialize(metrics)
         dimensions = serialize(dimensions)
