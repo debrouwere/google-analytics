@@ -307,7 +307,7 @@ class Query(object):
                 identifier = column.id
             elif isinstance(column, basestring):
                 ascending = column.startswith('-')
-                identifier = self.api.all_columns[column.lstrip('-')].id
+                identifier = self.api.columns[column.lstrip('-')].id
             else:
                 raise ValueError()
 
