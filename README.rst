@@ -30,6 +30,16 @@ Python <https://developers.google.com/api-client-library/python/start/installati
    webproperty to profile to dimensions, both programmatically and with
    the included command-line interface.
 
+Installation
+------------
+
+``pip install googleanalytics`` or ``pip3 install googleanalytics``
+should do the trick.
+
+For Python 3, you might need to grab the latest version of the httplib2
+from GitHub, as the PyPI version is out of date. Try
+``pip3 install git+https://github.com/jcgregorio/httplib2``.
+
 Authentication
 --------------
 
