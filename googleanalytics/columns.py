@@ -2,7 +2,13 @@
 
 import re
 import functools
-import __builtin__
+
+# Python 2 and 3 compatibility
+try:
+    import builtins
+    unicode = str
+except ImportError:
+    import __builtin__ as builtins
 
 import addressable
 from addressable import map, filter
@@ -36,7 +42,7 @@ def escape_chars(value, chars=',;'):
 def escape(method):
     @functools.wraps(method)
     def escaped_method(self, *values):
-        values = __builtin__.map(escape_chars, values)
+        values = builtins.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
 

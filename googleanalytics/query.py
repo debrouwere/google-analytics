@@ -51,7 +51,7 @@ class Report(object):
         # TODO: figure out how this works with paginated queries
         self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
-        self.total = raw['totalsForAllResults'].values()[0]
+        self.total = list(raw['totalsForAllResults'].values())[0]
         # print(self.totals)
 
     @property
@@ -305,7 +305,7 @@ class Query(object):
             if isinstance(column, Column):
                 ascending = False
                 identifier = column.id
-            elif isinstance(column, basestring):
+            elif isinstance(column, utils.basestring):
                 ascending = column.startswith('-')
                 identifier = self.api.columns[column.lstrip('-')].id
             else:

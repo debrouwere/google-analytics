@@ -5,11 +5,19 @@ import copy
 import datetime
 import textwrap
 import operator
+import functools
 from dateutil.parser import parse as parse_date
 from dateutil.relativedelta import relativedelta
 
 from .functional import memoize, immutable, identity, soak, vectorize
 from .server import single_serve
+
+
+# Python 2 and 3 compatibility
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def simplify(value):
@@ -20,7 +28,7 @@ def simplify(value):
 
 
 def flatten(l):
-    return reduce(operator.add, l)
+    return functools.reduce(operator.add, l)
 
 
 def date(obj):

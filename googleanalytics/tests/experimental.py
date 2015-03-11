@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 import unittest
-from query import TestQueryingBase
+from .query import TestQueryingBase
 
 
 class TestExperimental(TestQueryingBase):
