@@ -5,6 +5,8 @@ python:
 branches:
     except:
         - realtime
-install: python setup.py install
+install:
+    - python setup.py install
+    - pip install git+https://github.com/jcgregorio/httplib2 --upgrade
 script: python setup.py test
 sudo: false
