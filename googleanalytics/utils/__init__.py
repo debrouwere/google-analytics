@@ -15,7 +15,7 @@ from .server import single_serve
 
 # Python 2 and 3 compatibility
 try:
-    basestring
+    basestring = basestring
 except NameError:
     basestring = str
 
