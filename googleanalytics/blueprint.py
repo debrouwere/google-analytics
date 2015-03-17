@@ -16,7 +16,7 @@ class Blueprint(object):
     def identity(self):
         data = self._identity
         if data:
-            if isinstance(data, basestring):
+            if isinstance(data, ga.utils.basestring):
                 return dict(identity=data)
             elif isinstance(data, dict):
                 return data

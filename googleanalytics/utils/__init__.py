@@ -16,8 +16,17 @@ from .server import single_serve
 # Python 2 and 3 compatibility
 try:
     basestring = basestring
+    unicode = unicode
+    input = raw_input
 except NameError:
     basestring = str
+    unicode = str
+    input = input
+
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
 
 
 def simplify(value):

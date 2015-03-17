@@ -2,11 +2,13 @@
 
 import os
 from copy import copy
+
 import httplib2
 import oauth2client
 import inspector
-from googleanalytics import utils
-import keyring
+
+from . import keyring
+from .. import utils
 
 
 def from_params(**params):
@@ -38,11 +40,11 @@ def from_prompt(**params):
     prompted = {}
 
     if not params.get('identity'):
-        prompted['identity'] = raw_input('Human-readable account name: ')
+        prompted['identity'] = utils.input('Human-readable account name: ')
     if not params.get('client_id'):
-        prompted['client_id'] = raw_input('Client ID: ')
+        prompted['client_id'] = utils.input('Client ID: ')
     if not params.get('client_secret'):
-        prompted['client_secret'] = raw_input('Client secret: ')
+        prompted['client_secret'] = utils.input('Client secret: ')
 
     return prompted
 

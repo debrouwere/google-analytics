@@ -3,25 +3,17 @@
 import re
 import functools
 
-# Python 2 and 3 compatibility
-try:
-    import builtins
-    unicode = str
-except ImportError:
-    import __builtin__ as builtins
-
 import addressable
 from addressable import map, filter
 from dateutil.parser import parse as parse_date
 
-from .utils import identity, vectorize
+from . import utils
 
-
-TODO = identity
+TODO = utils.identity
 
 # TODO: percent, time, currency
 TYPES = {
-    'STRING': unicode, 
+    'STRING': utils.unicode, 
     'INTEGER': int, 
     'FLOAT': float, 
     'PERCENT': TODO, 
@@ -51,7 +43,7 @@ class Column(object):
     @classmethod
     def from_metadata(cls, metadata):
         attributes = metadata['attributes']
-        data_format = DIMENSIONS.get(metadata['id']) or TYPES.get(attributes['dataType']) or identity
+        data_format = DIMENSIONS.get(metadata['id']) or TYPES.get(attributes['dataType']) or utils.identity
         is_deprecated = attributes.get('status', 'ACTIVE') == 'DEPRECATED'
         is_allowed_in_segments = 'allowedInSegments' in attributes
         column = Column(metadata['id'], 
@@ -63,7 +55,7 @@ class Column(object):
             )
         return column.expand()
 
-    def __init__(self, column_id, column_type, format=unicode, attributes={}, 
+    def __init__(self, column_id, column_type, format=utils.unicode, attributes={}, 
             deprecated=False, allowed_in_segments=True):
         self.account = None
         self.id = column_id
@@ -213,7 +205,7 @@ class ColumnList(addressable.List):
         else:
             return self[value]
 
-    @vectorize
+    @utils.vectorize
     def serialize(self, value, greedy=True):
         """
         Greedy serialization requires the value to either be a column 
