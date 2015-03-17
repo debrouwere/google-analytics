@@ -29,7 +29,7 @@ class Account(object):
     import googleanalytics as ga
     accounts = ga.authenticate()
     profile = accounts['debrouwere.org'].webproperties['UA-12933299-1'].profiles['debrouwere.org']
-    report = profile.core.query('pageviews').range('2014-10-01', '2014-10-31').execute()
+    report = profile.core.query('pageviews').range('2014-10-01', '2014-10-31').get()
     print(report['pageviews'])
     ```
     """
@@ -126,7 +126,7 @@ class Profile(object):
     profile, queries can only be created from a `Profile` object.
 
     ```python
-    profile.query('pageviews').range('2014-01-01', days=7).execute()
+    profile.query('pageviews').range('2014-01-01', days=7).get()
     ```
     """
 
