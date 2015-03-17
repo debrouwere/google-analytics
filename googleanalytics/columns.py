@@ -34,7 +34,7 @@ def escape_chars(value, chars=',;'):
 def escape(method):
     @functools.wraps(method)
     def escaped_method(self, *values):
-        values = builtins.map(escape_chars, values)
+        values = utils.builtins.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
 
