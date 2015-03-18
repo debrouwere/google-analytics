@@ -56,15 +56,23 @@ class Report(object):
 
     @property
     def first(self):
-        return self.rows[0]
+        if len(self.rows) == 0:
+            return None
+        else:
+            return self.rows[0]
 
     @property
     def last(self):
-        return self.rows[-1]
+        if len(self.rows) == 0:
+            return None
+        else:
+            return self.rows[-1]
 
     @property
     def value(self):
-        if len(self.rows) == 1:
+        if len(self.rows) == 0:
+            return None
+        elif len(self.rows) == 1:
             return self.values[0]
         else:
             raise ValueError("This report contains multiple rows or metrics. Please use `rows`, `first`, `last` or a column name.")
@@ -368,29 +376,15 @@ class Query(object):
             self._report = self.get()
         return self._report
 
-    # various lazy-loading shortcuts
-    @property
-    def rows(self):
-        return self.report.rows
-
-    @property
-    def first(self):
-        return self.report.first
-
-    @property
-    def last(self):
-        return self.report.last
-
-    @property
-    def value(self):
-        return self.report.value
-
-    @property
-    def values(self):
-        return self.report.values
-
-    def serialize(self):
-        return self.report.serialize()
+    # lazy-loading shortcuts
+    def __getattr__(self, name):
+        if hasattr(self.report, name):
+            return getattr(self.report, name)
+        else:
+            raise AttributeError("'{cls}' object and its associated 'Report' object have no attribute '{name}'".format(
+                cls=self.__class__.__name__, 
+                name=name, 
+                ))
 
     def __repr__(self):
         return "<googleanalytics.query.{} object: {} ({})>".format(self.__class__.__name__, self.title, self.profile.name)
