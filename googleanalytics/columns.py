@@ -78,7 +78,9 @@ class Column(object):
     def expand(self):
         columns = []
         if self.id.endswith('XX'):
-            for i in range(1, 21):
+            min_index = int(self.attributes.get('minTemplateIndex', '1'))
+            max_index = int(self.attributes.get('maxTemplateIndex', '20'))
+            for i in range(min_index, max_index + 1):
                 column = Column(self.id.replace('XX', str(i)), 
                     column_type=self.type, 
                     format=self.cast, 
