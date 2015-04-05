@@ -330,9 +330,33 @@ class Query(object):
         return self
 
     @utils.immutable
-    def filter(self, value):
+    def filter(self, value=None, **selection):
         """ Most of the actual functionality lives on the Column 
         object and the `all` and `any` functions. """
+        if value and len(selection):
+            raise ValueError("Cannot specify a filter string and a filter keyword selection at the same time.")
+        elif len(selection):
+            selections = []
+            for key, value in selection.items():
+                if '__' in key:
+                    column, selector = key.split('__')
+                else:
+                    column = key
+                    selector = 'eq'
+
+                if not hasattr(Column, selector):
+                    raise ValueError("{selector} is not a valid selector. Choose from: {options}".format(
+                        selector=selector,
+                        options=', '.join(Column.selectors), 
+                        ))
+
+                column = self.api.columns[column]                
+                select = getattr(column, selector)
+                selections.append(select(value))
+
+            # TODO: support for ORing multiple filters
+            value = ";".join(selections)
+
         self.raw['filters'] = value
 
     def build(self):

@@ -40,6 +40,21 @@ def escape(method):
 
 
 class Column(object):
+    selectors = (
+        'eq',
+        'neq',
+        'lt',
+        'lte',
+        'gt',
+        'gte',
+        'between',
+        'any',
+        'contains',
+        'ncontains',
+        're',
+        'nre',
+        )
+
     @classmethod
     def from_metadata(cls, metadata):
         attributes = metadata['attributes']
