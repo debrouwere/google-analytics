@@ -4,6 +4,8 @@
 """
 
 from copy import deepcopy
+import hashlib
+import json
 import collections
 import time
 from functools import partial
@@ -349,8 +351,12 @@ class Query(object):
 
         self.raw['filters'] = value
 
-    def build(self):
-        raw = deepcopy(self.raw)
+    def build(self, copy=True):
+        if copy:
+            raw = deepcopy(self.raw)
+        else:
+            raw = self.raw
+
         raw['metrics'] = ','.join(self.raw['metrics'])
         
         if len(raw['dimensions']):
@@ -360,11 +366,22 @@ class Query(object):
 
         return raw
 
+    @property
+    def cacheable(self):
+        return 'start_date' in self.raw and 'end_date' in self.raw
+
+    @property
+    def signature(self):
+        query = self.build(copy=False)
+        standardized_query = sorted(query.items(), key=lambda t: t[0])
+        serialized_query = json.dumps(standardized_query)
+        return hashlib.sha1(serialized_query.encode('utf-8')).hexdigest()
+
     def execute(self):
         raw = self.build()
 
-        if self.cache and self.cache.exists(raw):
-            response = self.cache.get(raw)
+        if self.api.cache and self.cacheable and self.api.cache.exists(self.signature):
+            response = self.api.cache.get(raw)
         else:
             try:
                 self._wait()
@@ -385,8 +402,8 @@ class Query(object):
                 else:
                     raise err
 
-        if self.cache:
-            self.cache.set(raw, response)
+        if self.api.cache and self.cacheable:
+            self.api.cache.set(raw, response)
 
         return Report(response, self)
 
