@@ -171,16 +171,6 @@ class Query(object):
         self._lock = time.time()
         return wait
 
-    # REFACTOR
-    def _serialize_criterion(criterion):
-        pattern = r'(?P<identifier>[\w:]+)((?P<operator>[\!\=\>\<\@\~]+)(?P<value>[\w:]+))?'
-        match = re.match(pattern, criterion)
-        identifier = match.group('identifier')
-        operator = match.group('operator') or ''
-        value = match.group('value') or ''
-        column = self.api.all_columns.serialize(identifier)
-        return column + operator + value
-
     @property
     def endpoint(self):
         return self.account.service.data().ga()
