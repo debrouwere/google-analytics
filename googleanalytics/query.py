@@ -363,24 +363,30 @@ class Query(object):
     def execute(self):
         raw = self.build()
 
-        try:
-            self._wait()
-            response = self.endpoint.get(**raw).execute()
-        except Exception as err:
-            if isinstance(err, TypeError):
-                parameters = utils.paste(self.raw, '\t', '\n', pad=True)
-                message = err.message
-                diagnostics = utils.format(
-                    """
-                    {message}
+        if self.cache and self.cache.exists(raw):
+            response = self.cache.get(raw)
+        else:
+            try:
+                self._wait()
+                response = self.endpoint.get(**raw).execute()
+            except Exception as err:
+                if isinstance(err, TypeError):
+                    parameters = utils.paste(self.raw, '\t', '\n', pad=True)
+                    message = err.message
+                    diagnostics = utils.format(
+                        """
+                        {message}
 
-                    The query you submitted was:
+                        The query you submitted was:
 
-                    {parameters}
-                    """, message=message, parameters=parameters)
-                raise errors.InvalidRequestError(diagnostics)
-            else:
-                raise err
+                        {parameters}
+                        """, message=message, parameters=parameters)
+                    raise errors.InvalidRequestError(diagnostics)
+                else:
+                    raise err
+
+        if self.cache:
+            self.cache.set(raw, response)
 
         return Report(response, self)
 

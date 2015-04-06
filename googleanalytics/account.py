@@ -172,6 +172,9 @@ class ReportingAPI(object):
         self.report_type = self.REPORT_TYPES[endpoint]
         self.query = functools.partial(self.QUERY_TYPES[endpoint], self)
 
+        # optional caching layer
+        self.cache = None
+
     @property
     @utils.memoize
     def columns(self):
