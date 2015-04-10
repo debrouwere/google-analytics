@@ -233,5 +233,5 @@ class RealTimeReportingAPI(ReportingAPI):
     @utils.memoize
     def all_columns(self):
         raw_columns = yaml.load(open(utils.here('realtime.yml')))
-        hydrated_columns = [Column(item, self) for item in raw_columns]
+        hydrated_columns = utils.flatten(map(Column.from_metadata, raw_columns))
         return ColumnList(hydrated_columns)

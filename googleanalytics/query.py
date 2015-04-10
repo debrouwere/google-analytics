@@ -461,7 +461,7 @@ class CoreQuery(Query):
     # userIp / quotaUser
     # https://developers.google.com/analytics/devguides/reporting/core/v3/reference#q_summary
 
-    PRECISION_LEVELS = ('FASTER', 'DEFAULT', 'HIGH_PRECISION', )
+    PRECISION_LEVELS = ('FASTER', 'DEFAULT', 'HIGHER_PRECISION', )
     GRANULARITY_LEVELS = ('year', 'month', 'week', 'day', 'hour', )
     GRANULARITY_DIMENSIONS = (
         'ga:year', 'ga:yearMonth', 'ga:yearWeek', 
