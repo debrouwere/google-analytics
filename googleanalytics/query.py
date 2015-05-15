@@ -389,7 +389,6 @@ class Query(object):
             except Exception as err:
                 if isinstance(err, TypeError):
                     parameters = utils.paste(self.raw, '\t', '\n', pad=True)
-                    message = err.message
                     diagnostics = utils.format(
                         """
                         {message}
@@ -397,7 +396,7 @@ class Query(object):
                         The query you submitted was:
 
                         {parameters}
-                        """, message=message, parameters=parameters)
+                        """, message=str(err), parameters=parameters)
                     raise errors.InvalidRequestError(diagnostics)
                 else:
                     raise err
@@ -794,7 +793,7 @@ def describe(profile, description):
     Mostly useful if you'd like to put your queries
     in a file, rather than in Python code.
     """
-    api_type = description.get('type', 'core')
+    api_type = description.pop('type', 'core')
     api = getattr(profile, api_type)
     return refine(api.query(), description)
 
