@@ -9,15 +9,28 @@ import googleanalytics as ga
 from .common import authenticated, cli
 
 
+# e.g.
+# 
+#   googleanalytics query pageviews Fusion "Fusion (production)" "All Web Site Data" \
+#       --identity fusion --start yesterday --stop yesterday
+
 @cli.command()
+@click.argument('metrics')
 @click.argument('account', required=False)
 @click.argument('webproperty', required=False)
 @click.argument('profile', required=False)
+@click.option('--dimensions')
+@click.option('--start')
+@click.option('--stop')
 @click.option('-b', '--blueprint', type=click.File('r'))
-@click.option('-i', '--identity')
-def query(identity=None, account=None, webproperty=None, profile=None, blueprint=None):
-    # profile = ga.auth.navigate(accounts, account, webproperty, profile)
-    
+@click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
+@authenticated
+def query(identity, accounts, metrics, 
+        account=None, webproperty=None, profile=None, 
+        blueprint=None, 
+        dimensions=None, 
+        **description):
+
     if blueprint:
         description = yaml.load(blueprint)
         blueprint = ga.Blueprint(description)
@@ -38,4 +51,19 @@ def query(identity=None, account=None, webproperty=None, profile=None, blueprint
 
         click.echo(json.dumps(reports, indent=2))
     else:
-        raise NotImplementedError()
+        if not (account and webproperty and profile):
+            raise ValueError("Account, webproperty and profile needed for query.")
+
+        profile = ga.auth.navigate(accounts, account, webproperty, profile)
+        description = {
+            'type': description['type'],         
+            'range': {
+                'start': description['start'], 
+                'stop': description['stop'],
+                },
+            'metrics': metrics.split(','), 
+            }
+        query = ga.query.describe(profile, description)
+
+        serialized_report = query.serialize()
+        print(json.dumps(serialized_report, indent=4))
