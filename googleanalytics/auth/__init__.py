@@ -24,9 +24,9 @@ def navigate(accounts, account=None, webproperty=None, profile=None):
 
     if webproperty:
         if account:
-            scope = scope.webproperties[webproperty]
+            scope = scope.webproperties[webproperty].profile
         else:
-            raise KeyError("Cannot navigate to a webproperty without knowing the account.")
+            raise KeyError("Cannot navigate to a webproperty or profile without knowing the account.")
 
     if profile:
         if account and webproperty:

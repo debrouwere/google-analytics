@@ -88,6 +88,11 @@ class WebProperty(object):
         self.url = raw.get('websiteUrl')
 
     @property
+    def profile(self):
+        default = self.raw['defaultProfileId']
+        return self.profiles[default]
+
+    @property
     @utils.memoize
     def profiles(self):
         """

@@ -40,7 +40,7 @@ def shell(identity, accounts, account=None, webproperty=None, profile=None):
         print("  e.g. `core.metrics('pageviews').daily('yesterday').values`")
     else:
         print('* global variables: scope')
-        print('  (provide account, webproperty and profile for additional shortcuts)')
+        print('  (provide webproperty and/or profile for additional shortcuts)')
 
     print()
 
