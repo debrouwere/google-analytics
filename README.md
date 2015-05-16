@@ -73,6 +73,15 @@ client = dict(
 accounts = ga.authenticate(**client)
 ```
 
+Finally, our wrapper also has experimental support for [service accounts](https://developers.google.com/identity/protocols/OAuth2ServiceAccount), but only for Python 3. First, you should install 
+[PyCrypto](https://github.com/dlitz/pycrypto), e.g. using `pip3 install pycrypto`.
+
+Instead of a client secret and client id, authenticate with a client email and private key (you can generate these credentials in the Developer Console).
+
+```python
+ga.authenticate(client_email=client_email, private_key=private_key)
+```
+
 ### Storing credentials
 
 If you'd like to store the OAuth2 tokens so you don't have to ask for permission every time you run your code, you absolutely can. On the command-line, this is the default behavior: once authenticated, we save your credentials. In Python, pass `save=True` and `interactive=True`: 

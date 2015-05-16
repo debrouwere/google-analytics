@@ -14,7 +14,7 @@ from .. import utils
 def from_params(**params):
     credentials = {}
     for key, value in params.items():
-        if key in ('client_id', 'client_secret', 'access_token', 'refresh_token', 'identity'):
+        if key in ('client_id', 'client_secret', 'client_email', 'private_key', 'access_token', 'refresh_token', 'identity'):
             credentials[key] = value
     return credentials
 
@@ -136,7 +136,7 @@ class Credentials(object):
         authentication attempt. """
         two_legged = self.client_email and self.private_key
         three_legged = self.client_id and self.client_secret
-        return two_legged or three_legged
+        return two_legged or three_legged or False
 
     @property
     def invalid(self):
@@ -159,7 +159,7 @@ class Credentials(object):
             if self.type == 2:
                 return oauth2client.client.SignedJwtAssertionCredentials(
                     service_account_name=self.client_email, 
-                    private_key=private_key, 
+                    private_key=self.private_key.encode('utf-8'), 
                     scope='https://www.googleapis.com/auth/analytics.readonly', 
                     )
             else:

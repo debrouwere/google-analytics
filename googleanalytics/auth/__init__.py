@@ -43,6 +43,7 @@ def identity(name):
 
 def authenticate(
         client_id=None, client_secret=None, 
+        client_email=None, private_key=None, 
         access_token=None, refresh_token=None, 
         account=None, webproperty=None, profile=None, 
         identity=None, prefix=None, suffix=None, 
@@ -55,6 +56,8 @@ def authenticate(
         suffix=suffix,
         client_id=client_id, 
         client_secret=client_secret, 
+        client_email=client_email,
+        private_key=private_key,
         access_token=access_token, 
         refresh_token=refresh_token, 
         identity=identity,
@@ -70,8 +73,15 @@ def authenticate(
                 prefix=prefix, 
                 suffix=suffix, 
                 )
+        elif credentials.type == 2:
+            credentials = authorize(
+                client_email=credentials.client_email,
+                private_key=credentials.private_key,
+                identity=credentials.identity,
+                save=save,
+                )
         else:
-            raise KeyError("Cannot authenticate: enable interactive authorization or pass a token.")
+            raise KeyError("Cannot authenticate: enable interactive authorization, pass a token or use a service account.")
     
     accounts = oauth.authenticate(credentials)
     scope = navigate(accounts, account=account, webproperty=webproperty, profile=profile)
