@@ -511,7 +511,7 @@ class CoreQuery(Query):
         query.range('2014-01-01', '2014-01-31', precision='DEFAULT')
         # queries that are more precise
         query.range('2014-01-01', '2014-01-31', precision=2)
-        query.range('2014-01-01', '2014-01-31', precision='HIGH_PRECISION')        
+        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')        
         ```
 
         **Note:** it is currently not possible to easily specify that you'd like 
@@ -536,7 +536,7 @@ class CoreQuery(Query):
 
         if precision not in self.PRECISION_LEVELS:
             levels = ", ".join(self.PRECISION_LEVELS)
-            raise ValueError("Granularity should be one of: " + levels)
+            raise ValueError("Precision should be one of: " + levels)
 
         if precision != 'DEFAULT':
             self.raw.update({'samplingLevel': precision})
@@ -546,7 +546,7 @@ class CoreQuery(Query):
                 if granularity in self.GRANULARITY_LEVELS:
                     granularity = self.GRANULARITY_LEVELS.index(granularity)
                 else:
-                    levels = ", ".join(options.keys())
+                    levels = ", ".join(self.GRANULARITY_LEVELS)
                     raise ValueError("Granularity should be one of: " + levels)
 
             dimension = self.GRANULARITY_DIMENSIONS[granularity]
