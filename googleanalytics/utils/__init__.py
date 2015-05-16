@@ -85,6 +85,10 @@ def daterange(start, stop=None, months=0, days=0):
     return (start, stop)
 
 
+def is_relative_date(datestring):
+    return not '-' in datestring
+
+
 def wrap(obj):
     if isinstance(obj, list):
         return obj
