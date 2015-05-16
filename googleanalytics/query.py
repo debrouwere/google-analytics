@@ -368,7 +368,9 @@ class Query(object):
 
     @property
     def cacheable(self):
-        return 'start_date' in self.raw and 'end_date' in self.raw
+        start = 'start_date' in self.raw and not utils.is_relative_date(self.raw['start_date'])
+        end = 'end_date' in self.raw and not utils.is_relative_date(self.raw['end_date'])
+        return start and end
 
     @property
     def signature(self):
