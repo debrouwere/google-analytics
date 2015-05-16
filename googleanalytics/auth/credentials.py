@@ -96,9 +96,14 @@ class Credentials(object):
         else:
             return credentials
 
-    def __init__(self, client_id=None, client_secret=None, access_token=None, refresh_token=None, identity=None):
+    def __init__(self, client_id=None, client_secret=None, 
+            client_email=None, private_key=None, 
+            access_token=None, refresh_token=None, 
+            identity=None):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.client_email = client_email
+        self.private_key = private_key
         self.access_token = access_token
         self.refresh_token = refresh_token
         self._identity = identity
@@ -116,11 +121,22 @@ class Credentials(object):
         self._identity = value
 
     @property
+    def type(self):
+        if self.client_email and self.private_key:
+            return 2
+        elif self.client_id and self.client_secret:
+            return 3
+        else:
+            return None
+
+    @property
     def valid(self):
         """ Valid credentials are not necessarily correct, but 
         they contain all necessary information for an 
         authentication attempt. """
-        return self.client_id and self.client_secret
+        two_legged = self.client_email and self.private_key
+        three_legged = self.client_id and self.client_secret
+        return two_legged or three_legged
 
     @property
     def invalid(self):
@@ -128,8 +144,8 @@ class Credentials(object):
 
     @property
     def complete(self):
-        """ Complete credentials are valid and include a token. """
-        return self.valid and (self.access_token or self.refresh_token)
+        """ Complete credentials are valid and are either two-legged or include a token. """
+        return self.valid and (self.access_token or self.refresh_token or self.type == 2)
 
     @property
     def incomplete(self):
@@ -140,24 +156,33 @@ class Credentials(object):
         if self.incomplete:
             return None
         else:
-            return oauth2client.client.OAuth2Credentials(
-                access_token=self.access_token,
-                client_id=self.client_id,
-                client_secret=self.client_secret,
-                refresh_token=self.refresh_token,
-                token_expiry=None,
-                token_uri=oauth2client.GOOGLE_TOKEN_URI,
-                user_agent=None,
-                revoke_uri=oauth2client.GOOGLE_REVOKE_URI,
-                id_token=None,
-                token_response=None
-                )
+            if self.type == 2:
+                return oauth2client.client.SignedJwtAssertionCredentials(
+                    service_account_name=self.client_email, 
+                    private_key=private_key, 
+                    scope='https://www.googleapis.com/auth/analytics.readonly', 
+                    )
+            else:
+                return oauth2client.client.OAuth2Credentials(
+                    access_token=self.access_token,
+                    client_id=self.client_id,
+                    client_secret=self.client_secret,
+                    refresh_token=self.refresh_token,
+                    token_expiry=None,
+                    token_uri=oauth2client.GOOGLE_TOKEN_URI,
+                    user_agent=None,
+                    revoke_uri=oauth2client.GOOGLE_REVOKE_URI,
+                    id_token=None,
+                    token_response=None
+                    )
 
     def serialize(self):
         return {
             'identity': self.identity, 
             'client_id': self.client_id, 
             'client_secret': self.client_secret, 
+            'client_email': self.client_email,
+            'private_key': self.private_key,
             'access_token': self.access_token, 
             'refresh_token': self.refresh_token, 
         }

@@ -15,7 +15,6 @@ from . import keyring
 from . import oauth
 from .oauth import Flow, Credentials
 
-
 def navigate(accounts, account=None, webproperty=None, profile=None):
     scope = accounts
 
@@ -78,15 +77,17 @@ def authenticate(
     scope = navigate(accounts, account=account, webproperty=webproperty, profile=profile)
     return scope
 
-def authorize(client_id=None, client_secret=None, save=False, identity=None, prefix=None, suffix=None):
+def authorize(client_id=None, client_secret=None, client_email=None, private_key=None, save=False, identity=None, prefix=None, suffix=None):
     base_credentials = oauth.Credentials.find(
-        valid=True, 
-        interactive=True, 
-        identity=identity, 
-        client_id=client_id, 
+        valid=True,
+        interactive=True,
+        identity=identity,
+        client_id=client_id,
         client_secret=client_secret,
-        prefix=prefix, 
-        suffix=suffix, 
+        client_email=client_email,
+        private_key=private_key,
+        prefix=prefix,
+        suffix=suffix,
         )
 
     if base_credentials.incomplete:
