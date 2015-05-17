@@ -48,7 +48,17 @@ def authenticate(
         account=None, webproperty=None, profile=None, 
         identity=None, prefix=None, suffix=None, 
         interactive=False, save=False):
-    
+    """
+    The `authenticate` function will authenticate the user with the Google Analytics API, 
+    using a variety of strategies: keyword arguments provided to this function, credentials
+    stored in in environment variables, credentials stored in the keychain and, finally, by 
+    asking for missing information interactively in a command-line prompt.
+
+    If necessary (but only if `interactive=True`) this function will also allow the user 
+    to authorize this Python module to access Google Analytics data on their behalf, 
+    using an OAuth2 token.
+    """
+
     credentials = oauth.Credentials.find(
         valid=True,
         interactive=interactive,
@@ -112,6 +122,12 @@ def authorize(client_id=None, client_secret=None, client_email=None, private_key
     return credentials
 
 def revoke(client_id, client_secret, access_token=None, refresh_token=None, identity=None, prefix=None, suffix=None):
+    """
+    Given a client id, client secret and either an access token or a refresh token, 
+    revoke OAuth access to the Google Analytics data and remove any stored credentials 
+    that use these tokens.
+    """
+
     credentials = oauth.Credentials.find(
         complete=True, 
         interactive=False, 
