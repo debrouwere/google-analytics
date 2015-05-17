@@ -307,7 +307,7 @@ class Query(object):
         return self._specify(dimensions=dimensions)
 
     @utils.immutable
-    def sort(self, descending=False, *columns):
+    def sort(self, *columns, **options):
         """
         Return a new query which will produce results sorted by 
         one or more metrics or dimensions. You may use plain 
@@ -328,6 +328,7 @@ class Query(object):
         query.sort(-pageviews)
         ```
         """
+        descending = options.get('descending', False)
 
         sorts = []
 
@@ -338,7 +339,7 @@ class Query(object):
                 descending = column.startswith('-')
                 identifier = self.api.columns[column.lstrip('-')].id
             else:
-                raise ValueError()
+                raise ValueError("Can only sort on columns or column strings. Received: {}".format(column))
 
             if descending:
                 sign = '-'
