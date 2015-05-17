@@ -74,7 +74,11 @@ class Column(object):
         self.account = None
         self.id = column_id
         self.report_type, self.slug = self.id.split(':')
-        self.base_id, self.index = re.match(r'^(.*?)(\d{1,2})?$', self.slug).groups()
+        index = re.search(r'\d{1,2}', self.slug)
+        if index:
+            self.index = int(index.group(0))
+        else:
+            self.index = None
         self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
         self.attributes = attributes
         self.name = attributes.get('uiName', column_id).replace('XX', str(self.index))
@@ -91,7 +95,7 @@ class Column(object):
 
     def expand(self):
         columns = []
-        if self.id.endswith('XX'):
+        if 'XX' in self.id:
             min_index = int(self.attributes.get('minTemplateIndex', '1'))
             max_index = int(self.attributes.get('maxTemplateIndex', '20'))
             for i in range(min_index, max_index + 1):
