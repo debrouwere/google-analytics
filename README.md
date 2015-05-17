@@ -204,6 +204,7 @@ profile.realtime.query('pageviews', 'minutes ago').values
 
 The only caveat is that not all of the metrics and dimensions you're used to from the Core are supported. Take a look at the [Real Time Reporting API reference documentation][realtime/reference] to find out more, or check out all available columns interactively through `Profile#realtime.metrics` and `Profile#realtime.dimensions` in Python.
 
+[realtime]:https://developers.google.com/analytics/devguides/reporting/realtime/v3/
 [realtime/access]:https://docs.google.com/forms/d/1qfRFysCikpgCMGqgF3yXdUyQW4xAlLyjKuOoOEFN2Uw/viewform
 [realtime/reference]:https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/
 
