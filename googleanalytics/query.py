@@ -121,6 +121,28 @@ class Report(object):
         return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
 
 
+def select(source, selection):
+    selections = []
+    for key, value in selection.items():
+        if '__' in key:
+            column, method = key.split('__')
+        else:
+            column = key
+            method = 'eq'
+
+        if not hasattr(column, method):
+            raise ValueError("{selector} is not a valid selector. Choose from: {options}".format(
+                selector=selector,
+                options=', '.join(column.__class__.selectors), 
+                ))
+
+        column = source[column]                
+        selector = getattr(column, method)
+        selections.append(selector(value))
+
+    return selections
+
+
 class Query(object):
     """
     Return a query for certain metrics and dimensions.
@@ -328,24 +350,7 @@ class Query(object):
         if value and len(selection):
             raise ValueError("Cannot specify a filter string and a filter keyword selection at the same time.")
         elif len(selection):
-            selections = []
-            for key, value in selection.items():
-                if '__' in key:
-                    column, selector = key.split('__')
-                else:
-                    column = key
-                    selector = 'eq'
-
-                if not hasattr(Column, selector):
-                    raise ValueError("{selector} is not a valid selector. Choose from: {options}".format(
-                        selector=selector,
-                        options=', '.join(Column.selectors), 
-                        ))
-
-                column = self.api.columns[column]                
-                select = getattr(column, selector)
-                selections.append(select(value))
-
+            selections = select(self.api.columns, selection)
             # TODO: support for ORing multiple filters
             value = ";".join(selections)
 
