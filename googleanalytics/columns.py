@@ -5,24 +5,23 @@ import functools
 
 import addressable
 from addressable import map, filter
-from dateutil.parser import parse as parse_date
 
 from . import utils
 
 TODO = utils.identity
 
-# TODO: percent, time, currency
 TYPES = {
     'STRING': utils.unicode, 
     'INTEGER': int, 
     'FLOAT': float, 
-    'PERCENT': TODO, 
-    'TIME': TODO, 
-    'CURRENCY': TODO, 
+    'PERCENT': float, 
+    'TIME': float, 
+    'CURRENCY': float, 
 }
 
 DIMENSIONS = {
-    'ga:date': parse_date, 
+    'ga:date': utils.date.parse, 
+    'ga:dateHour': utils.date.parse, 
 }
 
 
