@@ -8,7 +8,6 @@ from addressable import map, filter
 
 from . import utils
 
-TODO = utils.identity
 
 TYPES = {
     'STRING': utils.unicode, 
