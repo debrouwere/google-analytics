@@ -97,6 +97,12 @@ class Report(object):
             serialized.append(row)
         return serialized
 
+    def as_dataframe(self):
+        import pandas
+        # passing every row as a dictionary is not terribly efficient, 
+        # but it works for now
+        return pandas.DataFrame(self.serialize())
+
     def __getitem__(self, key):
         try:
             if isinstance(key, Column):
@@ -301,7 +307,7 @@ class Query(object):
         return self._specify(dimensions=dimensions)
 
     @utils.immutable
-    def sort(self, *columns):
+    def sort(self, *columns, descending=False):
         """
         Return a new query which will produce results sorted by 
         one or more metrics or dimensions. You may use plain 
@@ -314,9 +320,11 @@ class Query(object):
         ```python
         # sort using strings
         query.sort('pageviews', '-device type')
+        # alternatively, ask for a descending sort in a keyword argument
+        query.sort('pageviews', descending=True)
 
         # sort using metric, dimension or column objects
-        pageviews = account.metrics['pageviews']
+        pageviews = profile.core.metrics['pageviews']
         query.sort(-pageviews)
         ```
         """
@@ -325,15 +333,14 @@ class Query(object):
 
         for column in columns:          
             if isinstance(column, Column):
-                ascending = False
                 identifier = column.id
             elif isinstance(column, utils.basestring):
-                ascending = column.startswith('-')
+                descending = column.startswith('-')
                 identifier = self.api.columns[column.lstrip('-')].id
             else:
                 raise ValueError()
 
-            if ascending:
+            if descending:
                 sign = '-'
             else:
                 sign = ''
