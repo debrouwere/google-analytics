@@ -36,10 +36,6 @@ Installation
 ``pip install googleanalytics`` or ``pip3 install googleanalytics``
 should do the trick.
 
-For Python 3, you might need to grab the latest version of the httplib2
-from GitHub, as the PyPI version is out of date. Try
-``pip3 install git+https://github.com/jcgregorio/httplib2``.
-
 Authentication
 --------------
 
@@ -108,6 +104,20 @@ the safest option:
         client_secret='mysecret'
     )
     accounts = ga.authenticate(**client)
+
+Finally, our wrapper also has experimental support for `service
+accounts <https://developers.google.com/identity/protocols/OAuth2ServiceAccount>`__,
+but only for Python 3. First, you should install
+`PyCrypto <https://github.com/dlitz/pycrypto>`__, e.g. using
+``pip3 install pycrypto``.
+
+Instead of a client secret and client id, authenticate with a client
+email and private key (you can generate these credentials in the
+Developer Console).
+
+.. code:: python
+
+    ga.authenticate(client_email=client_email, private_key=private_key)
 
 Storing credentials
 ~~~~~~~~~~~~~~~~~~~
@@ -236,8 +246,9 @@ interface on the ``Account`` object.
 Using the Real Time Reporting API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The [Real Time Reporting API][realtime] is currently in closed beta.
-However, you can `request
+The `Real Time Reporting
+API <https://developers.google.com/analytics/devguides/reporting/realtime/v3/>`__
+is currently in closed beta. However, you can `request
 access <https://docs.google.com/forms/d/1qfRFysCikpgCMGqgF3yXdUyQW4xAlLyjKuOoOEFN2Uw/viewform>`__
 by filling out a short form and will generally be granted access to the
 API within 24 hours.
