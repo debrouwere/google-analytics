@@ -307,7 +307,7 @@ class Query(object):
         return self._specify(dimensions=dimensions)
 
     @utils.immutable
-    def sort(self, *columns, descending=False):
+    def sort(self, descending=False, *columns):
         """
         Return a new query which will produce results sorted by 
         one or more metrics or dimensions. You may use plain 
