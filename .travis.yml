@@ -4,6 +4,5 @@ python:
   - "3.4"
 install:
     - python setup.py install
-    - pip install git+https://github.com/jcgregorio/httplib2 --upgrade
 script: python setup.py test
 sudo: false

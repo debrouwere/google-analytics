@@ -20,8 +20,6 @@ This package is built on top of [Google's own API client for Python](https://dev
 
 `pip install googleanalytics` or `pip3 install googleanalytics` should do the trick.
 
-For Python 3, you might need to grab the latest version of the httplib2 from GitHub, as the PyPI version is out of date. Try `pip3 install git+https://github.com/jcgregorio/httplib2`.
-
 ## Authentication
 
 The newest Google Analytics API, v3, only supports authentication using OAuth2. It won't work with your account username and password. There's a few steps to get started.
