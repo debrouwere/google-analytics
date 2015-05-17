@@ -2,13 +2,11 @@
 
 import os
 import copy
-import datetime
 import textwrap
 import operator
 import functools
-from dateutil.parser import parse as parse_date
-from dateutil.relativedelta import relativedelta
 
+from . import date
 from .functional import memoize, immutable, identity, soak, vectorize
 from .server import single_serve
 
@@ -29,64 +27,11 @@ except ImportError:
     import builtins
 
 
-def simplify(value):
-    if isinstance(value, datetime.datetime):
-        return value.isoformat()
-    else:
-        return value
+
 
 
 def flatten(l):
     return functools.reduce(operator.add, l)
-
-
-def date(obj):
-    if obj is None:
-        return None
-    elif isinstance(obj, datetime.date):
-        if hasattr(dt, 'date'):
-            return obj.date()
-        else:
-            return obj
-    elif isinstance(obj, basestring):
-        return parse_date(obj).date()
-    else:
-        raise ValueError("Can only convert strings into dates, received {}".format(obj.__class__))
-
-
-def date_or_description(obj):
-    if isinstance(obj, basestring):
-        if obj in ['today', 'yesterday']:
-            return obj
-        elif obj.endswith('daysAgo'):
-            return obj
-        else:
-            return date(obj)
-
-
-def daterange(start, stop=None, months=0, days=0):
-    start = date_or_description(start)
-    stop = date_or_description(stop)
-
-    if days or months:
-        if stop:
-            raise Exception(
-                "A daterange cannot be defined using stop alongside months or days.")
-
-        stop = start + relativedelta(days=days-1, months=months)
-    else:
-        stop = stop or start
-
-    if isinstance(start, datetime.date):
-        start = start.isoformat()
-    if isinstance(stop, datetime.date):
-        stop = stop.isoformat()
-
-    return (start, stop)
-
-
-def is_relative_date(datestring):
-    return not '-' in datestring
 
 
 def wrap(obj):

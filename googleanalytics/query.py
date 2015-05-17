@@ -93,7 +93,7 @@ class Report(object):
         for row in self.rows:
             row = row._asdict()
             for key, value in row.items():
-                row[key] = utils.simplify(value)
+                row[key] = utils.date.serialize(value)
             serialized.append(row)
         return serialized
 
@@ -368,8 +368,8 @@ class Query(object):
 
     @property
     def cacheable(self):
-        start = 'start_date' in self.raw and not utils.is_relative_date(self.raw['start_date'])
-        end = 'end_date' in self.raw and not utils.is_relative_date(self.raw['end_date'])
+        start = 'start_date' in self.raw and not utils.date.is_relative(self.raw['start_date'])
+        end = 'end_date' in self.raw and not utils.date.is_relative(self.raw['end_date'])
         return start and end
 
     @property
@@ -470,7 +470,7 @@ class CoreQuery(Query):
     )
 
     @utils.immutable
-    def range(self, start, stop=None, months=0, days=0, precision=1, granularity=None):
+    def range(self, start=None, stop=None, months=0, days=0, precision=1, granularity=None):
         """
         Return a new query that fetches metrics within a certain date range.
 
@@ -524,7 +524,7 @@ class CoreQuery(Query):
         [query]: https://developers.google.com/analytics/devguides/reporting/core/v3/reference#q_summary
         """
 
-        start, stop = utils.daterange(start, stop, months, days)
+        start, stop = utils.date.range(start, stop, months, days)
 
         self.raw.update({
             'start_date': start, 
