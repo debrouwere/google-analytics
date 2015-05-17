@@ -9,6 +9,7 @@ Priorities:
 
 Can wait: 
 
+* [ ] consider turning `sort` and `filter` into an additive interface so that e.g. `query.sort('-pageviews').sort('exits')` does the right thing
 * [ ] nicer and more powerful `CoreQuery#segment` interface, perhaps using `query#users` and `query#sessions`, with a signature like `*segments, scope=None)` (where scope would refer to the inner scope, which can be more precise than the segment scope) and then use the `or`, `and` and `any` functions as well as methods on Column objects to fill out the remaining functionality
 * [ ] example report-to-html template
 * [ ] unit tests for the authentication functionality
