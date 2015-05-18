@@ -19,6 +19,52 @@ from . import errors
 
 
 class Report(object):
+    """
+    Executing a query will return a report, which contains the requested data.
+
+    Queries are executed and turned into a report lazily, whenever data is requested.
+    You can also explicitly generate a report from a query by using the `Query#get` method.
+
+    ```python
+    # will return a query object
+    profile.core.query.metrics('pageviews').range('yesterday')
+    # will return a report object
+    profile.core.query.metrics('pageviews').range('yesterday').get()
+    # will generate a report object and return its rows -- these 
+    # two are equivalent
+    profile.core.query.metrics('pageviews').range('yesterday').rows
+    profile.core.query.metrics('pageviews').range('yesterday').get().rows
+    ```
+
+    You can access the data in a Report object both rowwise and columnwise.
+
+    ```python
+    report = query.metrics('pageviews', 'sessions').range('yesterday')
+    # first ten rows
+    report.rows[:10]
+    # work with just session data points
+    report['sessions'][:10]
+    report.rows[:10]['sessions']
+    ```
+
+    For simple data structures, there are also some shortcuts.
+
+    These shortcuts are available both directly on Report objects
+    and lazily-loaded via Query objects.
+
+    ```python
+    # reports with a single value
+    query = profile.core.query('pageviews').range('yesterday')
+    report = query.get()
+    assert query.value == report.value
+    # reports with a single metric
+    profile.core.query('pageviews').daily('yesterday', days=-10).values
+    # reports with a single result
+    query = profile.core.query(['pageviews', 'sessions']).range('yesterday')
+    assert query.first == query.last
+    ```
+    """
+
     def __init__(self, raw, query):
         self.raw = []
         self.queries = []
@@ -129,7 +175,7 @@ class Report(object):
 
 def select(source, selection):
     selections = []
-    for key, value in selection.items():
+    for key, values in selection.items():
         if '__' in key:
             column, method = key.split('__')
         else:
@@ -144,7 +190,14 @@ def select(source, selection):
 
         column = source[column]                
         selector = getattr(column, method)
-        selections.append(selector(value))
+
+        if not isinstance(values, (list, tuple)):
+            values = [values]
+
+        # e.g. source=['cpc', 'cpm'] will return an OR 
+        # filter for these two sources
+        for value in values:
+            selections.append(selector(value))
 
     return selections
 
@@ -330,7 +383,7 @@ class Query(object):
         """
         descending = options.get('descending', False)
 
-        sorts = []
+        sorts = self.meta.setdefault('sort', [])
 
         for column in columns:          
             if isinstance(column, Column):
@@ -355,14 +408,18 @@ class Query(object):
     def filter(self, value=None, **selection):
         """ Most of the actual functionality lives on the Column 
         object and the `all` and `any` functions. """
+        filters = self.meta.setdefault('filters', [])
+
         if value and len(selection):
             raise ValueError("Cannot specify a filter string and a filter keyword selection at the same time.")
+        elif value:
+            value = [value]
         elif len(selection):
-            selections = select(self.api.columns, selection)
-            # TODO: support for ORing multiple filters
-            value = ";".join(selections)
+            value = select(self.api.columns, selection)
 
-        self.raw['filters'] = value
+        filters.append(value)
+        self.raw['filters'] = utils.paste(filters, ',', ';')
+        return self
 
     def build(self, copy=True):
         if copy:

@@ -65,7 +65,7 @@ def paste(rows, connector='=', delimiter='&', pad=False):
         rows = [(key.ljust(width), value) for key, value in rows]
 
     return delimiter.join(
-        [connector.join([key, unicode(value)]) for key, value in rows])
+        [connector.join(map(unicode, row)) for row in rows])
 
 
 def format(string, **kwargs):

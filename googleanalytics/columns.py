@@ -25,6 +25,7 @@ DIMENSIONS = {
 
 
 def escape_chars(value, chars=',;'):
+    value = utils.unicode(value)
     for char in chars:
         value = value.replace(char, '\\' + char)
     return value

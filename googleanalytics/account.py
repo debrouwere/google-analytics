@@ -49,7 +49,7 @@ class Account(object):
         select a specific web property using its name, its id 
         or an index.
 
-        ```
+        ```python
         account.webproperties[0]
         account.webproperties['UA-9234823-5']
         account.webproperties['debrouwere.org']
@@ -100,7 +100,7 @@ class WebProperty(object):
         select a specific profile using its name, its id 
         or an index.
 
-        ```
+        ```python
         property.profiles[0]
         property.profiles['9234823']
         property.profiles['marketing profile']
