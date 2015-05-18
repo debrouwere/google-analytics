@@ -7,20 +7,31 @@ from . import base
 
 
 class TestReporting(base.TestCase):
-    def _test_tuples(self):
-        """ correct column names for tuples """
+    def test_tuples(self):
+        """ It should parse analytics responses into named tuples with the correct column names. """
+        report = self.query(['pageviews', 'sessions'], 'pagepath').range('yesterday').get()
+        row = report.rows[0]
+        self.assertEqual(row._fields, ('page_path', 'pageviews', 'sessions'))
 
-    def _test_shortcuts(self):
-        """ first, last, value, values """
+    def test_shortcuts(self):
+        """ It should have shortcuts to grab the first and last row.
+        It should have shortcuts to grab the first or all values of a one-metric query. """
+        report = self.query('pageviews').range('yesterday').get()     
+        self.assertEqual(report.first, report.rows[0])
+        self.assertEqual(report.last, report.rows[-1])
+        self.assertEqual(report.values, [report.rows[0].pageviews])
+        self.assertEqual(report.value, report.rows[0].pageviews)
 
-    def _test_rowwise(self):
-        """ report.rows """
+    def test_columnwise(self):
+        """ It should have the ability to extract a particular column of data. """
+        report = self.query('pageviews', 'pagepath').daily(days=-10).get()            
+        self.assertEqual(report['pagepath'], [row.page_path for row in report.rows])
 
-    def _test_columnwise(self):
-        """ report['col'] """
-
-    def _test_serialization(self):
+    def test_serialization(self):
         """ serialized rows """
+        serialized = self.query(['pageviews', 'sessions']).daily(days=-10).serialize()
+        for row in serialized:
+            self.assertTrue(set(row.keys()) == set(['date', 'pageviews', 'sessions']))
 
     def test_cast_numbers(self):
         """ It should cast columns that contain numeric data to the 
