@@ -6,28 +6,37 @@
 
 (The goal is for the command-line interface to have feature parity with the Python interface. We're working on it.)
 
-This package is built on top of [Google's own API client for Python](https://developers.google.com/api-client-library/python/start/installation).
-
 * **Authentication.** OAuth2 is a bit of a pain and we've made it easier, both for interactive use and for [server applications][rauth]. We can also save your credentials in the operating system's keychain if you want to.
 * **Querying.** Easier to query per week, month or year. Query using metric IDs or using their full names, whichever you think is nicer. Work with both the Core and the Real Time APIs.
 * **Reporting.** Generate reports from the command-line. Optionally describe reports and queries in [easy-to-read and easy-to-write YAML files][yaml]. Reports in Python work better too: iterate through the entire report or column-per-column.
 * **Exploration.** Traverse the account hierarchy from account to webproperty to profile to dimensions, both programmatically and with the included command-line interface.
 
+This package is built on top of [Google's own API client for Python][apiclient].
+
 [rauth]: https://github.com/debrouwere/google-analytics/blob/master/examples/server.py
 [yaml]: https://github.com/debrouwere/google-analytics/blob/master/examples/query.yml
+[apiclient]: https://developers.google.com/api-client-library/python/start/installation
 
-## Installation
+## Quickstart
 
-`pip install googleanalytics` or `pip3 install googleanalytics` should do the trick.
+First, install the package using [pip](https://pip.pypa.io/en/latest/)
 
-## Authentication
+* Python 2: `pip install googleanalytics`
+* Python 3: `pip3 install googleanalytics`
 
-...
+Then, create a new project in the [Google Developers Console](https://console.developers.google.com), enable the  Analytics API under "APIs & auth > APIs" and generate credentials for an installed application under "APIs & auth > Credentials". Keep this page open. For more detail, look at the [wiki page on authentication](https://github.com/debrouwere/google-analytics/wiki/Authentication).
 
-## Querying
+After that, executing your first query is as easy as
 
-...
+```python
+import googleanalytics as ga
+accounts = ga.authenticate()
+profile = accounts[0].webproperties[0].profile
+pageviews = profile.core.query('pageviews').range('yesterday').value
+print(pageviews)
+```
 
-## CLI
+The account, webproperty and profile determine what data you'll be querying. Learn more about profiles and querying on the [Querying](https://github.com/debrouwere/google-analytics/wiki/Querying) wiki page, or alternatively look at the [Common Queries](https://github.com/debrouwere/google-analytics/wiki/Common-Queries) page for lots of examples. Read more about how to work with the resulting data in [Working With Reports](https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports).
 
-...
+The example above will authorize the app and authenticate you interactively. It is also possible to pass credentials 
+as arguments in Python, using environment variables or from your operating system's keychain. Authentication is treated in much more depth on the [authentication wiki page](https://github.com/debrouwere/google-analytics/wiki/Authentication).
