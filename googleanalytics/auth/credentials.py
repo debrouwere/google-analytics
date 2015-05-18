@@ -19,7 +19,10 @@ def from_params(**params):
     return credentials
 
 def from_keyring(identity=None, **params):
-    return keyring.get(identity)
+    if identity:
+        return keyring.get(identity)
+    else:
+        return None
 
 def from_environment(prefix=None, suffix=None, **params):
     keys = {
