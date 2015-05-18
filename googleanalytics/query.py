@@ -136,10 +136,10 @@ def select(source, selection):
             column = key
             method = 'eq'
 
-        if not hasattr(column, method):
-            raise ValueError("{selector} is not a valid selector. Choose from: {options}".format(
-                selector=selector,
-                options=', '.join(column.__class__.selectors), 
+        if not hasattr(Column, method):
+            raise ValueError("{method} is not a valid selector. Choose from: {options}".format(
+                method=method,
+                options=', '.join(Column.selectors), 
                 ))
 
         column = source[column]                
@@ -514,7 +514,7 @@ class CoreQuery(Query):
         For queries that should run faster, you may specify a lower precision, 
         and for those that need to be more precise, a higher precision:
 
-        ```
+        ```python
         # faster queries
         query.range('2014-01-01', '2014-01-31', precision=0)
         query.range('2014-01-01', '2014-01-31', precision='FASTER')
