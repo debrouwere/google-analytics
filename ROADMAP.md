@@ -9,12 +9,12 @@ Priorities:
 
 Can wait: 
 
-* [ ] consider turning `sort` and `filter` into an additive interface so that e.g. `query.sort('-pageviews').sort('exits')` does the right thing
 * [ ] nicer and more powerful `CoreQuery#segment` interface, perhaps using `query#users` and `query#sessions`, with a signature like `*segments, scope=None)` (where scope would refer to the inner scope, which can be more precise than the segment scope) and then use the `or`, `and` and `any` functions as well as methods on Column objects to fill out the remaining functionality
 * [ ] example report-to-html template
 * [ ] unit tests for the authentication functionality
 * [ ] clean up some of the object initializations (__init__ should be clean, from_api can be dirty)
 * [ ] the ability to pluck rows and/or metrics in blueprints (e.g. it often happens that you query for a single metric in aggregate, and in that case the data you want back is `query.rows[0].mymetric`, that is, a single number, not a list of dictionaries)
+* [x] consider turning `sort` and `filter` into an additive interface so that e.g. `query.sort('-pageviews').sort('exits')` does the right thing
 * [x] caching of queries when using the lazy-loading shortcuts
 * [x] suggestions for similar keys when a KeyError is raised on a column
 * [x] support for the Real Time Reporting API
