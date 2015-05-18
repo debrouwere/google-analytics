@@ -2,27 +2,11 @@
 
 import googleanalytics as ga
 import os
-import unittest
 import datetime
 
+from . import base
 
-class TestQueryingBase(unittest.TestCase):
-    def setUp(self):
-        accounts = ga.authenticate(
-            client_id=os.environ['GOOGLE_ANALYTICS_CLIENT_ID'], 
-            client_secret=os.environ['GOOGLE_ANALYTICS_CLIENT_SECRET'], 
-            refresh_token=os.environ['GOOGLE_ANALYTICS_REFRESH_TOKEN'], 
-            )
-        if not len(accounts):
-            raise Exception("Cannot proceed with unit testing: \
-                the authorized Google account does not use Google Analytics.")
-        else:
-            self.account = accounts[0]
-            self.webproperty = self.account.webproperties[0]
-            self.profile = self.webproperty.profiles[0]
-            self.query = self.profile.core.query
-
-class TestQuerying(TestQueryingBase):
+class TestQuerying(base.TestCase):
     def test_raw(self):
         """ It should allow people to construct raw queries. """
         a = self.query('pageviews').range('2014-07-01', '2014-07-05')
@@ -150,22 +134,9 @@ class TestQuerying(TestQueryingBase):
             inverse_sorted_report['pageviews'][::-1], 
         )
 
-    def test_cast_numbers(self):
-        """ It should cast columns that contain numeric data to the 
-        proper numeric types. """
-        q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
-        report = q.get()
-
-        for n in report['pageviews']:
-            self.assertIsInstance(n, int)
-
-    def test_cast_dates(self):
-        """ It should cast columns containing dates to proper date objects. """
-        q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
-        report = q.get()
-
-        for date in report['date']:
-            self.assertIsInstance(date, datetime.datetime)
+    def test_sort_additive(self):
+        q = self.query('pageviews').sort('pageviews').sort('sessions', descending=True).build()
+        self.assertEqual(q['sort'], 'ga:pageviews,-ga:sessions')
 
     def test_segment_simple(self):
         """ It should support segmenting data by a segment column. """
@@ -177,7 +148,7 @@ class TestQuerying(TestQueryingBase):
 
         self.assertTrue(rs['pageviews'][0] <= r['pageviews'][0])
 
-    def test_filter_simple(self):
+    def test_filter_string(self):
         base = self.query('pageviews', 'ga:pagePath').range('2014-07-01')
         every = base.get()
         lt = base.filter('ga:pageviews<10').get()
@@ -189,6 +160,14 @@ class TestQuerying(TestQueryingBase):
         self.assertTrue(lt.issubset(every))
         self.assertTrue(gt.issubset(every))
         self.assertTrue(len(lt.intersection(gt)) == 0)
+
+    def test_filter_keywords(self):
+        q = self.query().filter(pageviews__lt=10).build()
+        self.assertEqual(q['filters'], 'ga:pageviews<10')
+
+    def test_filter_additive(self):
+        q = self.query('pageviews').filter(medium=['cpc', 'cpm']).filter(usertype__neq='Returning User').build()
+        self.assertEqual(q['filters'], 'ga:medium==cpc,ga:medium==cpm;ga:userType!=Returning User')
 
 
 if __name__ == '__main__':

@@ -1,17 +1,17 @@
 # encoding: utf-8
 
 import googleanalytics as ga
-import unittest
-import datetime
+
+from . import base
 
 
-class TestAuthentication(unittest.TestCase):
+class TestAuthentication(base.TestCase):
     """ Test whether the various authentication procedures work, 
     whether they result in tokens, whether those tokens can be 
     revoked etc. """
 
 
-class TestMetaData(unittest.TestCase):
+class TestMetaData(base.TestCase):
     """ Test whether various information about a Google Analytics
     account can be accessed: webproperties, profiles, columns, 
     metrics, dimensions, segments. """

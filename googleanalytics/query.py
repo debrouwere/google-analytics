@@ -381,7 +381,6 @@ class Query(object):
         query.sort(-pageviews)
         ```
         """
-        descending = options.get('descending', False)
 
         sorts = self.meta.setdefault('sort', [])
 
@@ -389,7 +388,7 @@ class Query(object):
             if isinstance(column, Column):
                 identifier = column.id
             elif isinstance(column, utils.basestring):
-                descending = column.startswith('-')
+                descending = column.startswith('-') or options.get('descending', False)
                 identifier = self.api.columns[column.lstrip('-')].id
             else:
                 raise ValueError("Can only sort on columns or column strings. Received: {}".format(column))
