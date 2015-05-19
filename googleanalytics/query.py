@@ -729,7 +729,18 @@ class CoreQuery(Query):
         return self
 
     @utils.immutable
-    def segment(self, value, type=None):
+    def segment_sequence(self, followed_by=False, immediately_followed_by=False, first=False):
+        # sequences are just really hard to "simplify" because so much is possible
+
+        if followed_by or immediately_followed_by:
+            method = 'sequence'
+        else:
+            method = 'condition'
+
+        raise NotImplementedError()
+
+    @utils.immutable
+    def segment(self, value=None, scope=None, metric_scope=None, **selection):
         """
         Return a new query, limited to a segment of all users or sessions.
 
@@ -764,15 +775,73 @@ class CoreQuery(Query):
         [issues]: https://github.com/debrouwere/google-analytics/issues
         """
 
-        # TODO / NOTE: support for dynamic segments using 
-        # conditions and sequences is barebones at the moment
-        if type:
-            value = "{type}::{value}".format(type=type, value=value)
-        else:
-            value = self.api.segments.serialize(value)
+        """
+        * users or sessions
+        * sequence or condition
+        * scope (perHit, perSession, perUser -- gte primary scope)
 
-        self.raw['segment'] = value
+        Multiple conditions can be ANDed or ORed together; these two are equivalent
+
+            users::condition::ga:revenue>10;ga:sessionDuration>60
+            users::condition::ga:revenue>10;users::condition::ga:sessionDuration>60
+
+        For sequences, prepending ^ means the first part of the sequence has to match
+        the first session/hit/...
+
+        * users and sessions conditions can be combined (but only with AND)
+        * sequences and conditions can also be combined (but only with AND)
+
+        sessions::sequence::ga:browser==Chrome;
+        condition::perHit::ga:timeOnPage>5
+        ->>
+        ga:deviceCategory==mobile;ga:revenue>10;
+        
+        users::sequence::ga:deviceCategory==desktop
+        ->>
+        ga:deviceCategory=mobile;
+        ga:revenue>100;
+        condition::ga:browser==Chrome
+
+        Problem: keyword arguments are passed as a dictionary, not an ordered dictionary!
+        So e.g. this is risky
+
+            query.sessions(time_on_page__gt=5, device_category='mobile', followed_by=True)
+
+        """
+
+        SCOPES = {
+            'hits': 'perHit', 
+            'sessions': 'perSession', 
+            'users': 'perUser', 
+            }
+        segments = self.meta.setdefault('segments', [])
+
+        if value and len(selection):
+            raise ValueError("Cannot specify a filter string and a filter keyword selection at the same time.")
+        elif value:
+            value = [self.api.segments.serialize(value)]
+        elif len(selection):
+            if not scope:
+                raise ValueError("Scope is required. Choose from: users, sessions.")
+
+            if metric_scope:
+                metric_scope = SCOPES[metric_scope]
+
+            value = select(self.api.columns, selection)
+            value = [[scope, 'condition', metric_scope, condition] for condition in value]
+            value = ['::'.join(filter(None, condition)) for condition in value]
+
+        segments.append(value)
+        self.raw['segment'] = utils.paste(segments, ',', ';')
         return self
+
+    @utils.immutable
+    def users(self, **kwargs):
+        return self.segment(scope='users', **kwargs)
+
+    @utils.immutable
+    def sessions(self):
+        return self.segment(scope='sessions', **kwargs)
 
     @utils.immutable
     def next(self):
