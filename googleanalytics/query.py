@@ -835,11 +835,9 @@ class CoreQuery(Query):
         self.raw['segment'] = utils.paste(segments, ',', ';')
         return self
 
-    @utils.immutable
     def users(self, **kwargs):
         return self.segment(scope='users', **kwargs)
 
-    @utils.immutable
     def sessions(self):
         return self.segment(scope='sessions', **kwargs)
 
