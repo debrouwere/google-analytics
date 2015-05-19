@@ -18,22 +18,19 @@ from .oauth import Flow, Credentials
 def navigate(accounts, account=None, webproperty=None, profile=None):
     scope = accounts
 
-    if account:
-        scope = scope[account]
-
-    if webproperty:
-        if account:
-            scope = scope.webproperties[webproperty].profile
-        else:
-            raise KeyError("Cannot navigate to a webproperty or profile without knowing the account.")
+    if webproperty and not account:
+        raise KeyError("Cannot navigate to a webproperty or profile without knowing the account.")
+    if profile and not (webproperty and account):
+        raise KeyError("Cannot navigate to a profile without knowing account and webproperty.")
 
     if profile:
-        if account and webproperty:
-            scope = scope.profiles[profile]
-        else:
-            raise KeyError("Cannot navigate to a profile without knowing account and webproperty.")
-
-    return scope
+        return accounts[account].webproperties[webproperty].profiles[profile]
+    elif webproperty:
+        return accounts[account].webproperties[webproperty].profile
+    elif account:
+        return accounts[account]
+    else:
+        return accounts
 
 def find(**kwargs):
     return oauth.Credentials.find(**kwargs)
