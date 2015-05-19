@@ -16,19 +16,22 @@ from .common import authenticated, cli
 
 @cli.command()
 @click.argument('metrics')
-@click.argument('account', required=False)
-@click.argument('webproperty', required=False)
-@click.argument('profile', required=False)
+@click.option('--account')
+@click.option('--webproperty')
+@click.option('--profile')
 @click.option('--dimensions')
 @click.option('--start')
 @click.option('--stop')
+@click.option('--limit')
+@click.option('--debug', is_flag=True)
+@click.option('--filter', multiple=True)
 @click.option('-b', '--blueprint', type=click.File('r'))
 @click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
 @authenticated
 def query(identity, accounts, metrics, 
+        dimensions=None, filter=None, limit=False, 
         account=None, webproperty=None, profile=None, 
-        blueprint=None, 
-        dimensions=None, 
+        blueprint=None, debug=False,
         **description):
 
     if blueprint:
@@ -51,8 +54,8 @@ def query(identity, accounts, metrics,
 
         click.echo(json.dumps(reports, indent=2))
     else:
-        if not (account and webproperty and profile):
-            raise ValueError("Account, webproperty and profile needed for query.")
+        if not (account and webproperty):
+            raise ValueError("Account and webproperty needed for query.")
 
         profile = ga.auth.navigate(accounts, account, webproperty, profile)
         description = {
@@ -62,8 +65,14 @@ def query(identity, accounts, metrics,
                 'stop': description['stop'],
                 },
             'metrics': metrics.split(','), 
+            'dimensions': (dimensions or '').split(','),  
+            'filter': (filter or '').split(','), 
+            'limit': int(limit) or False, 
             }
         query = ga.query.describe(profile, description)
+
+        if debug:
+            print(query.build())
 
         serialized_report = query.serialize()
         print(json.dumps(serialized_report, indent=4))

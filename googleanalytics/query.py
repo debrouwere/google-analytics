@@ -947,6 +947,9 @@ def refine(query, description):
         else:
             raise ValueError("Unknown query method: " + attribute)
 
+        if utils.isempty(arguments):
+            continue
+
         if callable(attribute):
             method = attribute
             if isinstance(arguments, dict):

@@ -87,6 +87,14 @@ def whitelist(d, allowed):
     return {k: v for k, v in d.items() if k in allowed}
 
 
+def isempty(obj):
+    if isinstance(obj, list):
+        return not len(list(filter(None, obj)))
+    elif isinstance(obj, dict):
+        return not len(obj)
+    else:
+        return not obj
+
 def here(*segments):
     current = os.path.dirname(__file__)
     return os.path.realpath(os.path.join(current, '..', *segments))
