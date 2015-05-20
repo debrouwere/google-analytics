@@ -62,6 +62,10 @@ def query(identity, accounts, metrics,
 
         profile = ga.auth.navigate(accounts, account, webproperty, profile)
 
+        # LIMIT can be a plain limit or start and length
+        if limit:
+            limit = list(map(int, limit.split(',')))
+
         description = {
             'type': description['type'],         
             'range': {
@@ -70,7 +74,7 @@ def query(identity, accounts, metrics,
                 },
             'metrics': utils.cut(metrics, ','), 
             'dimensions': utils.cut(dimensions, ','),  
-            'limit': int(limit) or False, 
+            'limit': limit, 
             'sort': sort, 
             }
         query = ga.query.describe(profile, description)
@@ -80,7 +84,7 @@ def query(identity, accounts, metrics,
 
         for s in segment:
             query = ga.query.refine(query, {'segment': dict(utils.cut(s, '=', ','))})
-        
+
         if debug:
             print(query.build())
 
