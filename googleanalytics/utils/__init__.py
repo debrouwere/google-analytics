@@ -56,16 +56,24 @@ def affix(prefix, base, suffix, connector='_'):
 
 
 # analogous to R's paste function
-def paste(rows, connector='=', delimiter='&', pad=False):
-    if isinstance(rows, dict):
-        rows = rows.items()
+def paste(rows, *delimiters):
+    delimiter = delimiters[-1]
+    delimiters = delimiters[:-1]
 
-    if pad:
-        width = max([len(key) for key, value in rows])
-        rows = [(key.ljust(width), value) for key, value in rows]
+    if len(delimiters):
+        return paste([paste(row, *delimiters) for row in rows], delimiter)
+    else:
+        return delimiter.join(map(unicode, rows))
 
-    return delimiter.join(
-        [connector.join(map(unicode, row)) for row in rows])
+# the inverse of `paste`
+def cut(s, *delimiters):
+    delimiter = delimiters[-1]
+    delimiters = delimiters[:-1]
+
+    if len(delimiters):
+        return [cut(ss, *delimiters) for ss in cut(s, delimiter)]
+    else:
+        return s.split(delimiter)
 
 
 def format(string, **kwargs):

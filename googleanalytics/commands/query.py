@@ -6,6 +6,7 @@ import yaml
 import click
 
 import googleanalytics as ga
+from googleanalytics import utils
 from .common import authenticated, cli
 
 
@@ -23,15 +24,17 @@ from .common import authenticated, cli
 @click.option('--start')
 @click.option('--stop')
 @click.option('--limit')
+@click.option('--sort')
 @click.option('--debug', is_flag=True)
 @click.option('--filter', multiple=True)
+@click.option('--segment', multiple=True)
 @click.option('-b', '--blueprint', type=click.File('r'))
 @click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
 @authenticated
 def query(identity, accounts, metrics, 
-        dimensions=None, filter=None, limit=False, 
+        dimensions=None, filter=None, limit=False, segment=None, sort=None, 
         account=None, webproperty=None, profile=None, 
-        blueprint=None, debug=False,
+        blueprint=None, debug=False, 
         **description):
 
     if blueprint:
@@ -58,19 +61,26 @@ def query(identity, accounts, metrics,
             raise ValueError("Account and webproperty needed for query.")
 
         profile = ga.auth.navigate(accounts, account, webproperty, profile)
+
         description = {
             'type': description['type'],         
             'range': {
                 'start': description['start'], 
                 'stop': description['stop'],
                 },
-            'metrics': metrics.split(','), 
-            'dimensions': (dimensions or '').split(','),  
-            'filter': (filter or '').split(','), 
+            'metrics': utils.cut(metrics, ','), 
+            'dimensions': utils.cut(dimensions, ','),  
             'limit': int(limit) or False, 
+            'sort': sort, 
             }
         query = ga.query.describe(profile, description)
 
+        for f in filter:
+            query = ga.query.refine(query, {'filter': dict(utils.cut(f, '=', ','))})
+
+        for s in segment:
+            query = ga.query.refine(query, {'segment': dict(utils.cut(s, '=', ','))})
+        
         if debug:
             print(query.build())
 
