@@ -459,7 +459,9 @@ class Query(object):
                 response = self.endpoint.get(**raw).execute()
             except Exception as err:
                 if isinstance(err, TypeError):
-                    parameters = utils.paste(self.raw, '\t', '\n', pad=True)
+                    width = max(map(len, self.raw.keys()))
+                    raw = [(key.ljust(width), value) for key, value in self.raw.items()]
+                    parameters = utils.paste(raw, '\t', '\n')
                     diagnostics = utils.format(
                         """
                         {message}
