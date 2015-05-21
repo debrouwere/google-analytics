@@ -151,6 +151,7 @@ class Report(object):
             return buf.getvalue()
         elif format == 'ascii':
             table = prettytable.PrettyTable(self.names)
+            table.align = 'l'
             for row in self.rows:
                 table.add_row(row)
             return table
