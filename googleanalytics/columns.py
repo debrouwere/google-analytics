@@ -25,9 +25,15 @@ DIMENSIONS = {
 
 
 def escape_chars(value, chars=',;'):
+    if value is True:
+        return 'Yes'
+    elif value is False:
+        return 'No'
+    
     value = utils.unicode(value)
     for char in chars:
         value = value.replace(char, '\\' + char)
+    
     return value
 
 def escape(method):
