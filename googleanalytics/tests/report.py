@@ -48,4 +48,4 @@ class TestReporting(base.TestCase):
         report = q.get()
 
         for date in report['date']:
-            self.assertIsInstance(date, datetime.datetime)
+            self.assertIsInstance(date, datetime.date)
