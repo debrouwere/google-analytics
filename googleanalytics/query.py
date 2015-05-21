@@ -492,6 +492,10 @@ class Query(object):
                         {parameters}
                         """, message=str(err), parameters=parameters)
                     raise errors.InvalidRequestError(diagnostics)
+                elif hasattr(err, 'content'):
+                    # circumvent bug in `googleapiclient` on Python 3
+                    err.content = err.content.decode('utf-8')
+                    raise errors.GoogleAnalyticsError(str(err))
                 else:
                     raise err
 
