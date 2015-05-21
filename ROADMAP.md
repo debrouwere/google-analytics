@@ -1,13 +1,13 @@
 # Roadmap
 
-Priorities: 
+Priorities:
 
 * [ ] query subcommand in the CLI
 * [x] expose reference documentation by turning it into HTML with [python-inspector](https://github.com/debrouwere/python-inspector/) and pandoc.
 * [x] fix bug in date handling of start/stop datetimes (see also: "extract date handling functionality")
 * [x] in-depth reference documentation of all major functionality (`authenticate`, `Account`, `CoreQuery`, `Report`) in docstrings
 
-Can wait: 
+Can wait:
 
 * [ ] nicer and more powerful `CoreQuery#segment` interface, perhaps using `query#users` and `query#sessions`, with a signature like `*segments, scope=None)` (where scope would refer to the inner scope, which can be more precise than the segment scope) and then use the `or`, `and` and `any` functions as well as methods on Column objects to fill out the remaining functionality
 * [ ] example report-to-html template
@@ -23,7 +23,7 @@ Can wait:
 * [x] drop into a Python shell, automatically log in and expose `accounts`
 * [x] wrap errors into ones that are easier to understand and test against in try/except blocks.
 
-As part of supporting / other modules: 
+As part of supporting / other modules:
 
 * [ ] extract date handling functionality (ultimately, this is generic and needed in different contexts) -- perhaps make it a part of `hrange`
 * [ ] utilities for humanized output (ratios, cognitively rounded numbers, etc.)

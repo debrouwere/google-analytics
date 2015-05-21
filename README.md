@@ -38,5 +38,5 @@ print(pageviews)
 
 The account, webproperty and profile determine what data you'll be querying. Learn more about profiles and querying on the [Querying](https://github.com/debrouwere/google-analytics/wiki/Querying) wiki page, or alternatively look at the [Common Queries](https://github.com/debrouwere/google-analytics/wiki/Common-Queries) page for lots of examples. Read more about how to work with the resulting data in [Working With Reports](https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports).
 
-The example above will authorize the app and authenticate you interactively. It is also possible to pass credentials 
+The example above will authorize the app and authenticate you interactively. It is also possible to pass credentials
 as arguments in Python, using environment variables or from your operating system's keychain. Authentication is treated in much more depth on the [authentication wiki page](https://github.com/debrouwere/google-analytics/wiki/Authentication).

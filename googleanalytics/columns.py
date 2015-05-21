@@ -10,17 +10,17 @@ from . import utils
 
 
 TYPES = {
-    'STRING': utils.unicode, 
-    'INTEGER': int, 
-    'FLOAT': float, 
-    'PERCENT': float, 
-    'TIME': float, 
-    'CURRENCY': float, 
+    'STRING': utils.unicode,
+    'INTEGER': int,
+    'FLOAT': float,
+    'PERCENT': float,
+    'TIME': float,
+    'CURRENCY': float,
 }
 
 DIMENSIONS = {
-    'ga:date': utils.date.parse, 
-    'ga:dateHour': utils.date.parse, 
+    'ga:date': utils.date.parse,
+    'ga:dateHour': utils.date.parse,
 }
 
 
@@ -60,16 +60,16 @@ class Column(object):
         data_format = DIMENSIONS.get(metadata['id']) or TYPES.get(attributes['dataType']) or utils.identity
         is_deprecated = attributes.get('status', 'ACTIVE') == 'DEPRECATED'
         is_allowed_in_segments = 'allowedInSegments' in attributes
-        column = Column(metadata['id'], 
-            column_type=attributes['type'].lower(), 
-            format=data_format, 
-            attributes=attributes, 
-            deprecated=is_deprecated, 
-            allowed_in_segments=is_allowed_in_segments, 
+        column = Column(metadata['id'],
+            column_type=attributes['type'].lower(),
+            format=data_format,
+            attributes=attributes,
+            deprecated=is_deprecated,
+            allowed_in_segments=is_allowed_in_segments,
             )
         return column.expand()
 
-    def __init__(self, column_id, column_type, format=utils.unicode, attributes={}, 
+    def __init__(self, column_id, column_type, format=utils.unicode, attributes={},
             deprecated=False, allowed_in_segments=True):
         self.account = None
         self.id = column_id
@@ -99,14 +99,14 @@ class Column(object):
             min_index = int(self.attributes.get('minTemplateIndex', '1'))
             max_index = int(self.attributes.get('maxTemplateIndex', '20'))
             for i in range(min_index, max_index + 1):
-                column = Column(self.id.replace('XX', str(i)), 
-                    column_type=self.type, 
-                    format=self.cast, 
-                    attributes=self.attributes, 
-                    deprecated=self.is_deprecated, 
-                    allowed_in_segments=self.is_allowed_in_segments, 
-                    )         
-                columns.append(column)   
+                column = Column(self.id.replace('XX', str(i)),
+                    column_type=self.type,
+                    format=self.cast,
+                    attributes=self.attributes,
+                    deprecated=self.is_deprecated,
+                    allowed_in_segments=self.is_allowed_in_segments,
+                    )
+                columns.append(column)
         else:
             columns = [self]
 
@@ -166,14 +166,14 @@ class Column(object):
 
     def __repr__(self):
         report_types = {
-            'ga': 'Core', 
-            'rt': 'Realtime', 
-            None: 'Unbound', 
+            'ga': 'Core',
+            'rt': 'Realtime',
+            None: 'Unbound',
         }
         return "<googleanalytics.columns.{query_type} object: {column_type}, {name} ({id})>".format(
             query_type=report_types[self.report_type],
-            column_type=self.type.capitalize(), 
-            name=self.name, 
+            column_type=self.type.capitalize(),
+            name=self.name,
             id=self.id
         )
 
@@ -184,7 +184,7 @@ class Segment(Column):
     def __init__(self, raw, account):
         self.raw = raw
         self.id = raw['segmentId']
-        self.report_type, self.slug = self.id.split('::')        
+        self.report_type, self.slug = self.id.split('::')
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']
@@ -228,12 +228,12 @@ class ColumnList(addressable.List):
     @utils.vectorize
     def serialize(self, value, greedy=True):
         """
-        Greedy serialization requires the value to either be a column 
-        or convertible to a column, whereas non-greedy serialization 
-        will pass through any string as-is and will only serialize 
+        Greedy serialization requires the value to either be a column
+        or convertible to a column, whereas non-greedy serialization
+        will pass through any string as-is and will only serialize
         Column objects.
 
-        Non-greedy serialization is useful when preparing queries with 
+        Non-greedy serialization is useful when preparing queries with
         custom filters or segments.
         """
 

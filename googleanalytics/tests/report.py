@@ -16,7 +16,7 @@ class TestReporting(base.TestCase):
     def test_shortcuts(self):
         """ It should have shortcuts to grab the first and last row.
         It should have shortcuts to grab the first or all values of a one-metric query. """
-        report = self.query('pageviews').range('yesterday').get()     
+        report = self.query('pageviews').range('yesterday').get()
         self.assertEqual(report.first, report.rows[0])
         self.assertEqual(report.last, report.rows[-1])
         self.assertEqual(report.values, [report.rows[0].pageviews])
@@ -24,7 +24,7 @@ class TestReporting(base.TestCase):
 
     def test_columnwise(self):
         """ It should have the ability to extract a particular column of data. """
-        report = self.query('pageviews', 'pagepath').daily(days=-10).get()            
+        report = self.query('pageviews', 'pagepath').daily(days=-10).get()
         self.assertEqual(report['pagepath'], [row.page_path for row in report.rows])
 
     def test_serialization(self):
@@ -34,7 +34,7 @@ class TestReporting(base.TestCase):
             self.assertTrue(set(row.keys()) == set(['date', 'pageviews', 'sessions']))
 
     def test_cast_numbers(self):
-        """ It should cast columns that contain numeric data to the 
+        """ It should cast columns that contain numeric data to the
         proper numeric types. """
         q = self.query('pageviews').daily('2014-07-01', '2014-07-02')
         report = q.get()

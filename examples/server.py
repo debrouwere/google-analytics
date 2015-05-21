@@ -5,8 +5,8 @@ import googleanalytics
 app = Flask(__name__)
 
 flow = googleanalytics.auth.Flow(
-    os.environ['GOOGLE_ANALYTICS_CLIENT_ID'], 
-    os.environ['GOOGLE_ANALYTICS_CLIENT_SECRET'], 
+    os.environ['GOOGLE_ANALYTICS_CLIENT_ID'],
+    os.environ['GOOGLE_ANALYTICS_CLIENT_SECRET'],
     redirect_uri='http://localhost:5000/auth/google/callback')
 
 @app.route('/auth/google')

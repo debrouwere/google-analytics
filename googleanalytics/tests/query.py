@@ -18,7 +18,7 @@ class TestQuerying(base.TestCase):
         self.assertEqual(a.raw, b.raw)
 
     def test_range_days(self):
-        """ It should support various ways of defining date ranges, 
+        """ It should support various ways of defining date ranges,
         and these will result in the correct start and end dates. """
         a = self.query('pageviews').range('2014-07-01', '2014-07-05')
         b = self.query('pageviews').range('2014-07-01', days=5)
@@ -28,7 +28,7 @@ class TestQuerying(base.TestCase):
         self.assertEqual(a.raw, b.raw)
 
     def test_range_months(self):
-        """ It should support various ways of defining date ranges, 
+        """ It should support various ways of defining date ranges,
         and these will result in the correct start and end dates. """
         a = self.query('pageviews').range('2014-07-01', '2014-08-31')
         b = self.query('pageviews').range('2014-07-01', months=2)
@@ -56,7 +56,7 @@ class TestQuerying(base.TestCase):
         self.assertEqual(c.raw, d.raw)
 
     def test_query_immutable(self):
-        """ It should always refine queries by creating a new query and 
+        """ It should always refine queries by creating a new query and
         never modify the original base query. """
         a = self.query('pageviews')
         b = a.range('2014-07-01')
@@ -66,7 +66,7 @@ class TestQuerying(base.TestCase):
 
     def test_granularity(self):
         """ It should have shortcut functions that make it easier to
-        define the granularity (hour, day, week, month, year) at which 
+        define the granularity (hour, day, week, month, year) at which
         to query should return results. """
         base = self.query('pageviews')
         a = base.range('2014-07-01', '2014-07-03').get()
@@ -100,8 +100,8 @@ class TestQuerying(base.TestCase):
         self.assertEqual(full_report['pageviews'][:2], limited_report['pageviews'])
 
     def test_start_limit(self):
-        """ It can limit the total amount of results as well as the 
-        index at which to start. """   
+        """ It can limit the total amount of results as well as the
+        index at which to start. """
         base = self \
             .query('pageviews') \
             .range('2014-07-01', '2014-07-05', granularity='day')
@@ -126,12 +126,12 @@ class TestQuerying(base.TestCase):
 
         self.assertEqual(inverse_sorted_report.queries[0].raw['sort'], '-ga:pageviews')
         self.assertEqual(
-            set(unsorted_report['pageviews']), 
-            set(sorted_report['pageviews']), 
+            set(unsorted_report['pageviews']),
+            set(sorted_report['pageviews']),
         )
         self.assertEqual(
-            sorted_report['pageviews'], 
-            inverse_sorted_report['pageviews'][::-1], 
+            sorted_report['pageviews'],
+            inverse_sorted_report['pageviews'][::-1],
         )
 
     def test_sort_additive(self):

@@ -11,7 +11,7 @@ from .common import authenticated, cli
 
 
 # e.g.
-# 
+#
 #   googleanalytics query pageviews \
 #     --start yesterday --limit -10 --sort -pageviews \
 #     --dimensions pagepath --filter pageviews__gt=-50 \
@@ -34,10 +34,10 @@ from .common import authenticated, cli
 @click.option('-b', '--blueprint', type=click.File('r'))
 @click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
 @authenticated
-def query(identity, accounts, metrics, 
-        dimensions=None, filter=None, limit=False, segment=None, sort=None, 
-        account=None, webproperty=None, profile=None, 
-        blueprint=None, debug=False, 
+def query(identity, accounts, metrics,
+        dimensions=None, filter=None, limit=False, segment=None, sort=None,
+        account=None, webproperty=None, profile=None,
+        blueprint=None, debug=False,
         **description):
 
     if blueprint:
@@ -53,9 +53,9 @@ def query(identity, accounts, metrics,
         for query in queries:
             report = query.get()
             reports.append({
-                'title': query.title, 
-                'query': query.raw, 
-                'results': report.serialize(), 
+                'title': query.title,
+                'query': query.raw,
+                'results': report.serialize(),
             })
 
         click.echo(json.dumps(reports, indent=2))
@@ -70,15 +70,15 @@ def query(identity, accounts, metrics,
             limit = list(map(int, limit.split(',')))
 
         description = {
-            'type': description['type'],         
+            'type': description['type'],
             'range': {
-                'start': description['start'], 
+                'start': description['start'],
                 'stop': description['stop'],
                 },
-            'metrics': utils.cut(metrics, ','), 
-            'dimensions': utils.cut(dimensions, ','),  
-            'limit': limit, 
-            'sort': sort, 
+            'metrics': utils.cut(metrics, ','),
+            'dimensions': utils.cut(dimensions, ','),
+            'limit': limit,
+            'sort': sort,
             }
         query = ga.query.describe(profile, description)
 

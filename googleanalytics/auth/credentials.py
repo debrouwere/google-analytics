@@ -26,9 +26,9 @@ def from_keyring(identity=None, **params):
 
 def from_environment(prefix=None, suffix=None, **params):
     keys = {
-        'client_id': utils.affix(prefix, 'GOOGLE_ANALYTICS_CLIENT_ID', suffix), 
-        'client_secret': utils.affix(prefix, 'GOOGLE_ANALYTICS_CLIENT_SECRET', suffix), 
-        'refresh_token': utils.affix(prefix, 'GOOGLE_ANALYTICS_REFRESH_TOKEN', suffix),       
+        'client_id': utils.affix(prefix, 'GOOGLE_ANALYTICS_CLIENT_ID', suffix),
+        'client_secret': utils.affix(prefix, 'GOOGLE_ANALYTICS_CLIENT_SECRET', suffix),
+        'refresh_token': utils.affix(prefix, 'GOOGLE_ANALYTICS_REFRESH_TOKEN', suffix),
     }
 
     credentials = {}
@@ -54,10 +54,10 @@ def from_prompt(**params):
 
 class Credentials(object):
     STRATEGIES = {
-        'params': from_params, 
-        'keyring': from_keyring, 
-        'environment': from_environment, 
-        'prompt': from_prompt, 
+        'params': from_params,
+        'keyring': from_keyring,
+        'environment': from_environment,
+        'prompt': from_prompt,
     }
 
     INTERACTIVE_STRATEGIES = ['params', 'keyring', 'environment', 'prompt']
@@ -82,8 +82,8 @@ class Credentials(object):
                 if not params.get(key):
                     params[key] = value
 
-        # the environment variable suffix is often a good 
-        # descriptor of the nature of these credentials, 
+        # the environment variable suffix is often a good
+        # descriptor of the nature of these credentials,
         # when lacking anything better
         if params.get('identity'):
             credentials.identity = params['identity']
@@ -99,9 +99,9 @@ class Credentials(object):
         else:
             return credentials
 
-    def __init__(self, client_id=None, client_secret=None, 
-            client_email=None, private_key=None, 
-            access_token=None, refresh_token=None, 
+    def __init__(self, client_id=None, client_secret=None,
+            client_email=None, private_key=None,
+            access_token=None, refresh_token=None,
             identity=None):
         self.client_id = client_id
         self.client_secret = client_secret
@@ -134,8 +134,8 @@ class Credentials(object):
 
     @property
     def valid(self):
-        """ Valid credentials are not necessarily correct, but 
-        they contain all necessary information for an 
+        """ Valid credentials are not necessarily correct, but
+        they contain all necessary information for an
         authentication attempt. """
         two_legged = self.client_email and self.private_key
         three_legged = self.client_id and self.client_secret
@@ -161,9 +161,9 @@ class Credentials(object):
         else:
             if self.type == 2:
                 return oauth2client.client.SignedJwtAssertionCredentials(
-                    service_account_name=self.client_email, 
-                    private_key=self.private_key.encode('utf-8'), 
-                    scope='https://www.googleapis.com/auth/analytics.readonly', 
+                    service_account_name=self.client_email,
+                    private_key=self.private_key.encode('utf-8'),
+                    scope='https://www.googleapis.com/auth/analytics.readonly',
                     )
             else:
                 return oauth2client.client.OAuth2Credentials(
@@ -181,13 +181,13 @@ class Credentials(object):
 
     def serialize(self):
         return {
-            'identity': self.identity, 
-            'client_id': self.client_id, 
-            'client_secret': self.client_secret, 
+            'identity': self.identity,
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
             'client_email': self.client_email,
             'private_key': self.private_key,
-            'access_token': self.access_token, 
-            'refresh_token': self.refresh_token, 
+            'access_token': self.access_token,
+            'refresh_token': self.refresh_token,
         }
 
     def authorize(self):
@@ -197,7 +197,7 @@ class Credentials(object):
         if not self.token:
             raise KeyError("Cannot revoke a token when no token was provided.")
 
-        # `credentials.revoke` will try to revoke the refresh token even 
+        # `credentials.revoke` will try to revoke the refresh token even
         # if it's None, which will fail, so we have to miss with the innards
         # of oauth2client here a little bit
         return self.oauth._do_revoke(httplib2.Http().request, self.token)
@@ -205,7 +205,7 @@ class Credentials(object):
 
 def normalize(fn):
     @inspector.changes(fn)
-    def normalized_fn(client_id=None, client_secret=None, 
+    def normalized_fn(client_id=None, client_secret=None,
             access_token=None, refresh_token=None, identity=None):
         
         if isinstance(client_id, Credentials):

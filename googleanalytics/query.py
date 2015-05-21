@@ -30,7 +30,7 @@ class Report(object):
     profile.core.query.metrics('pageviews').range('yesterday')
     # will return a report object
     profile.core.query.metrics('pageviews').range('yesterday').get()
-    # will generate a report object and return its rows -- these 
+    # will generate a report object and return its rows -- these
     # two are equivalent
     profile.core.query.metrics('pageviews').range('yesterday').rows
     profile.core.query.metrics('pageviews').range('yesterday').get().rows
@@ -73,7 +73,7 @@ class Report(object):
         headers = [registry[header['name']] for header in raw['columnHeaders']]
         slugs = [header.pyslug for header in headers]
         self.row_cls = collections.namedtuple('Row', slugs)
-        self.headers = addressable.List(headers, 
+        self.headers = addressable.List(headers,
             indices=registry.indexed_on, insensitive=True)
         self.metrics = set()
         self.dimensions = set()
@@ -89,7 +89,7 @@ class Report(object):
 
         casters = [column.cast for column in self.headers]
 
-        # if no rows were returned, the GA API doesn't 
+        # if no rows were returned, the GA API doesn't
         # include the `rows` key at all
         for row in self.raw[-1].get('rows', []):
             typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
@@ -145,7 +145,7 @@ class Report(object):
 
     def as_dataframe(self):
         import pandas
-        # passing every row as a dictionary is not terribly efficient, 
+        # passing every row as a dictionary is not terribly efficient,
         # but it works for now
         return pandas.DataFrame(self.serialize())
 
@@ -164,8 +164,8 @@ class Report(object):
     def __len__(self):
         return len(self.rows)
 
-    # TODO: would be cool if we could split up headers 
-    # into metrics vs. dimensions so we could say 
+    # TODO: would be cool if we could split up headers
+    # into metrics vs. dimensions so we could say
     # "pageviews by day, browser"
     # (also see `title` and `description` on query objects)
     def __repr__(self):
@@ -185,16 +185,16 @@ def select(source, selection):
         if not hasattr(Column, method):
             raise ValueError("{method} is not a valid selector. Choose from: {options}".format(
                 method=method,
-                options=', '.join(Column.selectors), 
+                options=', '.join(Column.selectors),
                 ))
 
-        column = source[column]                
+        column = source[column]
         selector = getattr(column, method)
 
         if not isinstance(values, (list, tuple)):
             values = [values]
 
-        # e.g. source=['cpc', 'cpm'] will return an OR 
+        # e.g. source=['cpc', 'cpm'] will return an OR
         # filter for these two sources
         for value in values:
             selections.append(selector(value))
@@ -213,12 +213,12 @@ class Query(object):
     profile.core.query(['pageviews'], ['browser'])
     ```
 
-    The returned query can then be further refined using 
-    all methods available on the `CoreQuery` object, such as 
+    The returned query can then be further refined using
+    all methods available on the `CoreQuery` object, such as
     `limit`, `sort`, `segment` and so on.
 
     Metrics and dimensions may be either strings (the column id or
-    the human-readable column name) or Metric or Dimension 
+    the human-readable column name) or Metric or Dimension
     objects.
 
     Metrics and dimensions specified as a string are not case-sensitive.
@@ -227,7 +227,7 @@ class Query(object):
     profile.query('PAGEVIEWS')
     ```
 
-    If specifying only a single metric or dimension, you can 
+    If specifying only a single metric or dimension, you can
     but are not required to wrap it in a list.
     """
 
@@ -267,10 +267,10 @@ class Query(object):
     @utils.immutable
     def set(self, key=None, value=None, **kwargs):
         """
-        `set` is a way to add raw properties to the request, 
-        for features that this module does not 
-        support or supports incompletely. For convenience's 
-        sake, it will serialize Column objects but will 
+        `set` is a way to add raw properties to the request,
+        for features that this module does not
+        support or supports incompletely. For convenience's
+        sake, it will serialize Column objects but will
         leave any other kind of value alone.
         """
 
@@ -329,7 +329,7 @@ class Query(object):
     def query(self, *vargs, **kwargs):
         """
         Return a new query with additional metrics and dimensions.
-        If specifying only a single metric or dimension, you can 
+        If specifying only a single metric or dimension, you can
         but are not required to wrap it in a list.
 
         This interface is identical to the one you use to construct
@@ -362,12 +362,12 @@ class Query(object):
     @utils.immutable
     def sort(self, *columns, **options):
         """
-        Return a new query which will produce results sorted by 
-        one or more metrics or dimensions. You may use plain 
-        strings for the columns, or actual `Column`, `Metric` 
+        Return a new query which will produce results sorted by
+        one or more metrics or dimensions. You may use plain
+        strings for the columns, or actual `Column`, `Metric`
         and `Dimension` objects.
 
-        Add a minus in front of the metric (either the string or 
+        Add a minus in front of the metric (either the string or
         the object) to sort in descending order.
 
         ```python
@@ -384,7 +384,7 @@ class Query(object):
 
         sorts = self.meta.setdefault('sort', [])
 
-        for column in columns:          
+        for column in columns:
             if isinstance(column, Column):
                 identifier = column.id
             elif isinstance(column, utils.basestring):
@@ -398,14 +398,14 @@ class Query(object):
             else:
                 sign = ''
 
-            sorts.append(sign + identifier) 
+            sorts.append(sign + identifier)
 
         self.raw['sort'] = ",".join(sorts)
         return self
 
     @utils.immutable
     def filter(self, value=None, **selection):
-        """ Most of the actual functionality lives on the Column 
+        """ Most of the actual functionality lives on the Column
         object and the `all` and `any` functions. """
         filters = self.meta.setdefault('filters', [])
 
@@ -491,8 +491,8 @@ class Query(object):
             return getattr(self.report, name)
         else:
             raise AttributeError("'{cls}' object and its associated 'Report' object have no attribute '{name}'".format(
-                cls=self.__class__.__name__, 
-                name=name, 
+                cls=self.__class__.__name__,
+                name=name,
                 ))
 
     def __repr__(self):
@@ -506,18 +506,18 @@ class CoreQuery(Query):
 
     The most important methods are:
 
-    * `metrics` and `dimensions` (both of which you can also pass as 
+    * `metrics` and `dimensions` (both of which you can also pass as
       lists when creating the query)
-    * `range` and its shortcuts that have the granularity already set: 
+    * `range` and its shortcuts that have the granularity already set:
       `hourly`, `daily`, `weekly`, `monthly`, `yearly`
     * `filter` to filter which rows are analyzed before running the query
-    * `segment` to filter down to a certain kind of session or user (as 
+    * `segment` to filter down to a certain kind of session or user (as
       opposed to `filter` which works on individual rows of data)
     * `limit` to ask for a subset of results
     * `sort` to sort the query
 
 
-    CoreQuery is mostly immutable: wherever possible, methods 
+    CoreQuery is mostly immutable: wherever possible, methods
     return a new query rather than modifying the existing one,
     so for example this works as you'd expect it to:
 
@@ -536,7 +536,7 @@ class CoreQuery(Query):
     PRECISION_LEVELS = ('FASTER', 'DEFAULT', 'HIGHER_PRECISION', )
     GRANULARITY_LEVELS = ('year', 'month', 'week', 'day', 'hour', )
     GRANULARITY_DIMENSIONS = (
-        'ga:year', 'ga:yearMonth', 'ga:yearWeek', 
+        'ga:year', 'ga:yearMonth', 'ga:yearWeek',
         'ga:date', 'ga:dateHour',
     )
 
@@ -549,14 +549,14 @@ class CoreQuery(Query):
         query.range('2014-01-01', '2014-06-30')
         ```
 
-        If you don't specify a `stop` argument, the date range will end today. If instead 
-        you meant to fetch just a single day's results, try: 
+        If you don't specify a `stop` argument, the date range will end today. If instead
+        you meant to fetch just a single day's results, try:
 
         ```python
         query.range('2014-01-01', days=1)
         ```
 
-        More generally, you can specify that you'd like a certain number of days, 
+        More generally, you can specify that you'd like a certain number of days,
         starting from a certain date:
 
         ```python
@@ -566,10 +566,10 @@ class CoreQuery(Query):
 
         Note that if you don't specify a granularity (either through the `granularity`
         argument or through the `hourly`, `daily`, `weekly`, `monthly` or `yearly`
-        shortcut methods) you will get only a single result, encompassing the 
+        shortcut methods) you will get only a single result, encompassing the
         entire date range, per metric.
 
-        For queries that should run faster, you may specify a lower precision, 
+        For queries that should run faster, you may specify a lower precision,
         and for those that need to be more precise, a higher precision:
 
         ```python
@@ -582,10 +582,10 @@ class CoreQuery(Query):
         query.range('2014-01-01', '2014-01-31', precision='DEFAULT')
         # queries that are more precise
         query.range('2014-01-01', '2014-01-31', precision=2)
-        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')        
+        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')      
         ```
 
-        **Note:** it is currently not possible to easily specify that you'd like 
+        **Note:** it is currently not possible to easily specify that you'd like
         to query the last last full week or weeks. This will be added sometime
         in the future.
 
@@ -598,8 +598,8 @@ class CoreQuery(Query):
         start, stop = utils.date.range(start, stop, months, days)
 
         self.raw.update({
-            'start_date': start, 
-            'end_date': stop, 
+            'start_date': start,
+            'end_date': stop,
         })
 
         if isinstance(precision, int):
@@ -633,9 +633,9 @@ class CoreQuery(Query):
     @inspector.implements(range)
     def daily(self, *vargs, **kwargs):
         """
-        Return a new query that fetches metrics within a certain date 
-        range, summarized by day. This method is identical to 
-        `CoreQuery#range` but it sets the default granularity to 
+        Return a new query that fetches metrics within a certain date
+        range, summarized by day. This method is identical to
+        `CoreQuery#range` but it sets the default granularity to
         `granularity='day'`.
         """
 
@@ -645,9 +645,9 @@ class CoreQuery(Query):
     @inspector.implements(range)
     def weekly(self, *vargs, **kwargs):
         """
-        Return a new query that fetches metrics within a certain date 
-        range, summarized by week. This method is identical to 
-        `CoreQuery#range` but it sets the default granularity to 
+        Return a new query that fetches metrics within a certain date
+        range, summarized by week. This method is identical to
+        `CoreQuery#range` but it sets the default granularity to
         `granularity='week'`.
         """
 
@@ -657,9 +657,9 @@ class CoreQuery(Query):
     @inspector.implements(range)
     def monthly(self, *vargs, **kwargs):
         """
-        Return a new query that fetches metrics within a certain date 
-        range, summarized by month. This method is identical to 
-        `CoreQuery#range` but it sets the default granularity to 
+        Return a new query that fetches metrics within a certain date
+        range, summarized by month. This method is identical to
+        `CoreQuery#range` but it sets the default granularity to
         `granularity='month'`.
         """
 
@@ -669,9 +669,9 @@ class CoreQuery(Query):
     @inspector.implements(range)
     def yearly(self, *vargs, **kwargs):
         """
-        Return a new query that fetches metrics within a certain date 
-        range, summarized by year. This method is identical to 
-        `CoreQuery#range` but it sets the default granularity to 
+        Return a new query that fetches metrics within a certain date
+        range, summarized by year. This method is identical to
+        `CoreQuery#range` but it sets the default granularity to
         `granularity='year'`.
         """
 
@@ -685,8 +685,8 @@ class CoreQuery(Query):
     @utils.immutable
     def step(self, maximum):
         """
-        Return a new query with a maximum amount of results to be returned 
-        in any one request, without implying that we should stop 
+        Return a new query with a maximum amount of results to be returned
+        in any one request, without implying that we should stop
         fetching beyond that limit (unlike `CoreQuery#limit`.)
 
         Useful in debugging pagination functionality.
@@ -710,11 +710,11 @@ class CoreQuery(Query):
         query.limit(50, 10)
         ```
 
-        Please note carefully that Google Analytics uses 
+        Please note carefully that Google Analytics uses
         1-indexing on its rows.
         """
 
-        # uses the same argument order as 
+        # uses the same argument order as
         # LIMIT in a SQL database
         if len(_range) == 2:
             start, maximum = _range
@@ -725,8 +725,8 @@ class CoreQuery(Query):
         self.meta['limit'] = maximum
 
         self.raw.update({
-            'start_index': start, 
-            'max_results': maximum, 
+            'start_index': start,
+            'max_results': maximum,
         })
         return self
 
@@ -754,7 +754,7 @@ class CoreQuery(Query):
         query.segment(account.segments['browser'].any('Chrome', 'Firefox'))
         ```
 
-        Segment can also accept a segment expression when you pass 
+        Segment can also accept a segment expression when you pass
         in a `type` argument. The type argument can be either `users`
         or `sessions`. This is pretty close to the metal.
 
@@ -765,12 +765,12 @@ class CoreQuery(Query):
 
         See the [Google Analytics dynamic segments documentation][segments]
 
-        You can also use the `any`, `all`, `followed_by` and 
-        `immediately_followed_by` functions in this module to 
+        You can also use the `any`, `all`, `followed_by` and
+        `immediately_followed_by` functions in this module to
         chain together segments.
 
         Everything about how segments get handled is still in flux.
-        Feel free to propose ideas for a nicer interface on 
+        Feel free to propose ideas for a nicer interface on
         the [GitHub issues page][issues]
 
         [segments]: https://developers.google.com/analytics/devguides/reporting/core/v3/segments#reference
@@ -778,7 +778,7 @@ class CoreQuery(Query):
         """
 
         """
-        Technical note to self about segments: 
+        Technical note to self about segments:
 
         * users or sessions
         * sequence or condition
@@ -813,9 +813,9 @@ class CoreQuery(Query):
         """
 
         SCOPES = {
-            'hits': 'perHit', 
-            'sessions': 'perSession', 
-            'users': 'perUser', 
+            'hits': 'perHit',
+            'sessions': 'perSession',
+            'users': 'perUser',
             }
         segments = self.meta.setdefault('segments', [])
 
@@ -859,10 +859,10 @@ class CoreQuery(Query):
         """
         Run the query and return a `Report`.
 
-        This method transparently handles paginated results, so even for results that 
-        are larger than the maximum amount of rows the Google Analytics API will 
-        return in a single request, or larger than the amount of rows as specified 
-        through `CoreQuery#step`, `get` will leaf through all pages,  
+        This method transparently handles paginated results, so even for results that
+        are larger than the maximum amount of rows the Google Analytics API will
+        return in a single request, or larger than the amount of rows as specified
+        through `CoreQuery#step`, `get` will leaf through all pages,
         concatenate the results and produce a single Report instance.
         """
 
@@ -905,7 +905,7 @@ class RealTimeQuery(Query):
         """
         Return a new query, limited to a certain number of results.
 
-        Unlike core reporting queries, you cannot specify a starting 
+        Unlike core reporting queries, you cannot specify a starting
         point for live queries, just the maximum results returned.
 
         ```python
@@ -916,7 +916,7 @@ class RealTimeQuery(Query):
 
         self.meta['limit'] = maximum
         self.raw.update({
-            'max_results': maximum, 
+            'max_results': maximum,
         })
         return self
 
@@ -926,8 +926,8 @@ class RealTimeQuery(Query):
 
 def describe(profile, description):
     """
-    Generate a query by describing it as a series of actions 
-    and parameters to those actions. These map directly 
+    Generate a query by describing it as a series of actions
+    and parameters to those actions. These map directly
     to Query methods and arguments to those methods.
 
     This is an alternative to the chaining interface.
@@ -950,7 +950,7 @@ def refine(query, description):
         else:
             raise ValueError("Unknown query method: " + attribute)
 
-        # query descriptions are often automatically generated, and 
+        # query descriptions are often automatically generated, and
         # may include empty calls, which we skip
         if utils.isempty(arguments):
             continue
@@ -965,5 +965,5 @@ def refine(query, description):
                 query = method(arguments)
         else:
             setattr(attribute, arguments)
-            
+    
     return query

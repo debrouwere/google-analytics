@@ -6,14 +6,14 @@ from . import base
 
 
 class TestAuthentication(base.TestCase):
-    """ Test whether the various authentication procedures work, 
-    whether they result in tokens, whether those tokens can be 
+    """ Test whether the various authentication procedures work,
+    whether they result in tokens, whether those tokens can be
     revoked etc. """
 
 
 class TestMetaData(base.TestCase):
     """ Test whether various information about a Google Analytics
-    account can be accessed: webproperties, profiles, columns, 
+    account can be accessed: webproperties, profiles, columns,
     metrics, dimensions, segments. """
 
     def _test_addressable(self):

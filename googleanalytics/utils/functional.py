@@ -1,9 +1,8 @@
 # encoding: utf-8
 
-import copy
 import functools
-import inspect
 import inspector
+
 
 class memoize:
   def __init__(self, function):
@@ -20,8 +19,8 @@ class memoize:
 
 def vectorize(fn):
     """
-    Allows a method to accept one or more values, 
-    but internally deal only with a single item, 
+    Allows a method to accept one or more values,
+    but internally deal only with a single item,
     and returning a list or a single item depending
     on what is desired.
     """
@@ -31,7 +30,7 @@ def vectorize(fn):
         wrap = not isinstance(values, (list, tuple))
         should_unwrap = not kwargs.setdefault('wrap', False)
         unwrap = wrap and should_unwrap
-        del kwargs['wrap']        
+        del kwargs['wrap']
         
         if wrap:
             values = [values]
@@ -45,7 +44,7 @@ def vectorize(fn):
 
     return vectorized_method
 
-        
+
 def immutable(method):
     @inspector.wraps(method)
     def wrapped_method(self, *vargs, **kwargs):

@@ -2,11 +2,11 @@
 
 """
 Convenience functions for authenticating with Google
-and asking for authorization with Google, with 
+and asking for authorization with Google, with
 `authenticate` at its core.
 
-`authenticate` will do what it says on the tin, but unlike 
-the basic `googleanalytics.oauth.authenticate`, it also tries 
+`authenticate` will do what it says on the tin, but unlike
+the basic `googleanalytics.oauth.authenticate`, it also tries
 to get existing credentials from the keyring, from environment
 variables, it prompts for information when required and so on.
 """
@@ -39,20 +39,20 @@ def identity(name):
     return find(identity=name)
 
 def authenticate(
-        client_id=None, client_secret=None, 
-        client_email=None, private_key=None, 
-        access_token=None, refresh_token=None, 
-        account=None, webproperty=None, profile=None, 
-        identity=None, prefix=None, suffix=None, 
+        client_id=None, client_secret=None,
+        client_email=None, private_key=None,
+        access_token=None, refresh_token=None,
+        account=None, webproperty=None, profile=None,
+        identity=None, prefix=None, suffix=None,
         interactive=False, save=False):
     """
-    The `authenticate` function will authenticate the user with the Google Analytics API, 
+    The `authenticate` function will authenticate the user with the Google Analytics API,
     using a variety of strategies: keyword arguments provided to this function, credentials
-    stored in in environment variables, credentials stored in the keychain and, finally, by 
+    stored in in environment variables, credentials stored in the keychain and, finally, by
     asking for missing information interactively in a command-line prompt.
 
-    If necessary (but only if `interactive=True`) this function will also allow the user 
-    to authorize this Python module to access Google Analytics data on their behalf, 
+    If necessary (but only if `interactive=True`) this function will also allow the user
+    to authorize this Python module to access Google Analytics data on their behalf,
     using an OAuth2 token.
     """
 
@@ -61,24 +61,24 @@ def authenticate(
         interactive=interactive,
         prefix=prefix,
         suffix=suffix,
-        client_id=client_id, 
-        client_secret=client_secret, 
+        client_id=client_id,
+        client_secret=client_secret,
         client_email=client_email,
         private_key=private_key,
-        access_token=access_token, 
-        refresh_token=refresh_token, 
+        access_token=access_token,
+        refresh_token=refresh_token,
         identity=identity,
         )
 
     if credentials.incomplete:
         if interactive:
             credentials = authorize(
-                client_id=credentials.client_id, 
-                client_secret=credentials.client_secret, 
-                save=save, 
-                identity=credentials.identity, 
-                prefix=prefix, 
-                suffix=suffix, 
+                client_id=credentials.client_id,
+                client_secret=credentials.client_secret,
+                save=save,
+                identity=credentials.identity,
+                prefix=prefix,
+                suffix=suffix,
                 )
         elif credentials.type == 2:
             credentials = authorize(
@@ -120,21 +120,21 @@ def authorize(client_id=None, client_secret=None, client_email=None, private_key
 
 def revoke(client_id, client_secret, access_token=None, refresh_token=None, identity=None, prefix=None, suffix=None):
     """
-    Given a client id, client secret and either an access token or a refresh token, 
-    revoke OAuth access to the Google Analytics data and remove any stored credentials 
+    Given a client id, client secret and either an access token or a refresh token,
+    revoke OAuth access to the Google Analytics data and remove any stored credentials
     that use these tokens.
     """
 
     credentials = oauth.Credentials.find(
-        complete=True, 
-        interactive=False, 
-        identity=identity, 
-        client_id=client_id, 
-        client_secret=client_secret, 
-        access_token=access_token, 
-        refresh_token=refresh_token, 
-        prefix=prefix, 
-        suffix=suffix, 
+        complete=True,
+        interactive=False,
+        identity=identity,
+        client_id=client_id,
+        client_secret=client_secret,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        prefix=prefix,
+        suffix=suffix,
         )
 
     retval = credentials.revoke()

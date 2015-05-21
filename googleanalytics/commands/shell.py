@@ -32,9 +32,9 @@ def shell(identity, accounts, account=None, webproperty=None, profile=None):
         profile = scope
         account = profile.account
         metrics = profile.core.metrics
-        dimensions = profile.core.dimensions        
+        dimensions = profile.core.dimensions
         core = profile.core.query()
-        realtime = profile.realtime.query()     
+        realtime = profile.realtime.query()
         print('* global variables: profile, account, metrics, dimensions')
         print('* build queries with the `core` and `realtime` variables')
         print("  e.g. `core.metrics('pageviews').daily('yesterday').values`")
