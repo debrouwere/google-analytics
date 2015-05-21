@@ -2,13 +2,13 @@
 
 import os
 import copy
-import textwrap
 import operator
 import functools
 
 from . import date
 from .functional import memoize, immutable, identity, soak, vectorize
 from .server import single_serve
+from .string import format, affix, paste, cut
 
 
 # Python 2 and 3 compatibility
@@ -27,13 +27,18 @@ except ImportError:
     import builtins
 
 
+# return a path relative to the package root
+def here(*segments):
+    current = os.path.dirname(__file__)
+    return os.path.realpath(os.path.join(current, '..', *segments))
 
 
-
+# flatten nested lists
 def flatten(l):
     return functools.reduce(operator.add, l)
 
 
+# wrap scalars into a list
 def wrap(obj):
     if isinstance(obj, list):
         return obj
@@ -41,45 +46,7 @@ def wrap(obj):
         return [obj]
 
 
-def affix(prefix, base, suffix, connector='_'):
-    if prefix:
-        prefix = prefix + connector
-    else:
-        prefix = ''
-
-    if suffix:
-        suffix = connector + suffix
-    else:
-        suffix = ''
-
-    return prefix + base + suffix
-
-
-# analogous to R's paste function
-def paste(rows, *delimiters):
-    delimiter = delimiters[-1]
-    delimiters = delimiters[:-1]
-
-    if len(delimiters):
-        return paste([paste(row, *delimiters) for row in rows], delimiter)
-    else:
-        return delimiter.join(map(unicode, rows))
-
-# the inverse of `paste`
-def cut(s, *delimiters):
-    delimiter = delimiters[-1]
-    delimiters = delimiters[:-1]
-
-    if len(delimiters):
-        return [cut(ss, *delimiters) for ss in cut(s, delimiter)]
-    else:
-        return s.split(delimiter)
-
-
-def format(string, **kwargs):
-    return textwrap.dedent(string).format(**kwargs)
-
-
+# substitute new dictionary keys
 def translate(d, mapping):
     d = copy.copy(d)
 
@@ -91,10 +58,12 @@ def translate(d, mapping):
     return d
 
 
+# retain only whitelisted keys in a dictionary
 def whitelist(d, allowed):
     return {k: v for k, v in d.items() if k in allowed}
 
 
+# test if an object is falsy or contains only falsy values
 def isempty(obj):
     if isinstance(obj, list):
         return not len(list(filter(None, obj)))
@@ -102,7 +71,3 @@ def isempty(obj):
         return not len(obj)
     else:
         return not obj
-
-def here(*segments):
-    current = os.path.dirname(__file__)
-    return os.path.realpath(os.path.join(current, '..', *segments))

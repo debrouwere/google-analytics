@@ -12,8 +12,11 @@ from .common import authenticated, cli
 
 # e.g.
 # 
-#   googleanalytics query pageviews Fusion "Fusion (production)" "All Web Site Data" \
-#       --identity fusion --start yesterday --stop yesterday
+#   googleanalytics query pageviews \
+#     --start yesterday --limit -10 --sort -pageviews \
+#     --dimensions pagepath --filter pageviews__gt=-50 \
+#     --identity debrouwere --account Fusion --webproperty "Fusion (production)" \
+#     --debug
 
 @cli.command()
 @click.argument('metrics')

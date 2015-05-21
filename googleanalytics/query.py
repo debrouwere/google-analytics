@@ -778,6 +778,8 @@ class CoreQuery(Query):
         """
 
         """
+        Technical note to self about segments: 
+
         * users or sessions
         * sequence or condition
         * scope (perHit, perSession, perUser -- gte primary scope)
@@ -808,7 +810,6 @@ class CoreQuery(Query):
         So e.g. this is risky
 
             query.sessions(time_on_page__gt=5, device_category='mobile', followed_by=True)
-
         """
 
         SCOPES = {
@@ -949,6 +950,8 @@ def refine(query, description):
         else:
             raise ValueError("Unknown query method: " + attribute)
 
+        # query descriptions are often automatically generated, and 
+        # may include empty calls, which we skip
         if utils.isempty(arguments):
             continue
 
