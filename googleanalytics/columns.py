@@ -19,8 +19,8 @@ TYPES = {
 }
 
 DIMENSIONS = {
-    'ga:date': utils.date.parse,
-    'ga:dateHour': utils.date.parse,
+    'ga:date': lambda date: utils.date.parse(date).date(),
+    'ga:dateHour': lambda date: utils.date.parse('{} {}'.format(date[:8], date[8:])),
 }
 
 
