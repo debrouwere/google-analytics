@@ -2,7 +2,6 @@
 
 import json
 import yaml
-
 import click
 
 import googleanalytics as ga
@@ -31,13 +30,14 @@ from .common import authenticated, cli
 @click.option('--debug', is_flag=True)
 @click.option('--filter', multiple=True)
 @click.option('--segment', multiple=True)
+@click.option('-s', '--show', type=click.Choice(['csv', 'json', 'ascii']), default='ascii')
 @click.option('-b', '--blueprint', type=click.File('r'))
 @click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
 @authenticated
 def query(identity, accounts, metrics,
         dimensions=None, filter=None, limit=False, segment=None, sort=None,
         account=None, webproperty=None, profile=None,
-        blueprint=None, debug=False,
+        blueprint=None, debug=False, show=None,
         **description):
 
     if blueprint:
@@ -91,5 +91,4 @@ def query(identity, accounts, metrics,
         if debug:
             print(query.build())
 
-        serialized_report = query.serialize()
-        print(json.dumps(serialized_report, indent=4))
+        print(query.serialize(format=show))

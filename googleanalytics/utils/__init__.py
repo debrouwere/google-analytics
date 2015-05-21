@@ -23,8 +23,10 @@ except NameError:
 
 try:
     import __builtin__ as builtins
+    from StringIO import StringIO
 except ImportError:
     import builtins
+    from io import StringIO
 
 
 # return a path relative to the package root

@@ -6,6 +6,9 @@
 from copy import deepcopy
 import hashlib
 import json
+import yaml
+import csv
+import prettytable
 import collections
 import time
 from functools import partial
@@ -71,8 +74,9 @@ class Report(object):
 
         registry = query.api.all_columns
         headers = [registry[header['name']] for header in raw['columnHeaders']]
-        slugs = [header.pyslug for header in headers]
-        self.row_cls = collections.namedtuple('Row', slugs)
+        self.slugs = [header.pyslug for header in headers]
+        self.names = [header.name for header in headers]
+        self.row_cls = collections.namedtuple('Row', self.slugs)
         self.headers = addressable.List(headers,
             indices=registry.indexed_on, insensitive=True)
         self.metrics = set()
@@ -134,7 +138,24 @@ class Report(object):
         else:
             raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
 
-    def serialize(self):
+    def serialize(self, format=None):
+        if not format:
+            return self.as_dict()
+        elif format == 'json':
+            return json.dumps(self.as_dict(), indent=4)
+        elif format == 'csv':
+            buf = utils.StringIO()
+            writer = csv.writer(buf)
+            writer.writerow(self.names)
+            writer.writerows(self.rows)
+            return buf.getvalue()
+        elif format == 'ascii':
+            table = prettytable.PrettyTable(self.names)
+            for row in self.rows:
+                table.add_row(row)
+            return table
+
+    def as_dict(self):
         serialized = []
         for row in self.rows:
             row = row._asdict()
@@ -147,7 +168,7 @@ class Report(object):
         import pandas
         # passing every row as a dictionary is not terribly efficient,
         # but it works for now
-        return pandas.DataFrame(self.serialize())
+        return pandas.DataFrame(self.as_dict())
 
     def __getitem__(self, key):
         try:
