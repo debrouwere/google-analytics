@@ -9,14 +9,8 @@ from googleanalytics import utils
 from .common import authenticated, cli
 
 
-# e.g.
-#
-#   googleanalytics query pageviews \
-#     --start yesterday --limit -10 --sort -pageviews \
-#     --dimensions pagepath --filter pageviews__gt=-50 \
-#     --identity debrouwere --account Fusion --webproperty "Fusion (production)" \
-#     --debug
-
+# TODO: maybe include an --interactive option, which defers
+# to `shell` but with a prefilled query?
 @cli.command()
 @click.argument('metrics')
 @click.option('--account')
@@ -27,18 +21,40 @@ from .common import authenticated, cli
 @click.option('--stop')
 @click.option('--limit')
 @click.option('--sort')
-@click.option('--debug', is_flag=True)
-@click.option('--filter', multiple=True)
-@click.option('--segment', multiple=True)
-@click.option('-s', '--show', type=click.Choice(['csv', 'json', 'ascii']), default='ascii')
-@click.option('-b', '--blueprint', type=click.File('r'))
-@click.option('-t', '--type', default='core', type=click.Choice(['core', 'realtime']))
+@click.option('--debug',
+    is_flag=True)
+@click.option('--filter',
+    multiple=True)
+@click.option('--segment',
+    multiple=True)
+@click.option('-i', '--interval',
+    type=click.Choice(['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'lifetime']),
+    default='lifetime')
+@click.option('-o', '--output',
+    type=click.Choice(['csv', 'json', 'ascii']),
+    default='ascii')
+@click.option('-b', '--blueprint',
+    type=click.File('r'))
+@click.option('-t', '--type',
+    default='core',
+    type=click.Choice(['core', 'realtime']))
 @authenticated
 def query(identity, accounts, metrics,
-        dimensions=None, filter=None, limit=False, segment=None, sort=None,
+        dimensions=None, interval=None, filter=None, limit=False, segment=None, sort=None,
         account=None, webproperty=None, profile=None,
         blueprint=None, debug=False, show=None,
         **description):
+    
+    """
+    e.g.
+
+        googleanalytics query pageviews \
+            --start yesterday --limit -10 --sort -pageviews \
+            --dimensions pagepath \
+            --identity debrouwere --account debrouwere --webproperty http://debrouwere.org \
+            --debug
+
+    """
 
     if blueprint:
         description = yaml.load(blueprint)

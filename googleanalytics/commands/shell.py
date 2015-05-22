@@ -12,13 +12,6 @@ except ImportError:
     def embed():
         code.interact(local=locals())
 
-"""
-profile = ga_profile()
-
-
-print("* )
-print("* Profile loaded into `profile`. Base query available at `base`.")
-"""
 
 @cli.command()
 @click.argument('account', required=False)

@@ -9,7 +9,7 @@ from .common import authenticated, cli
 
 
 @cli.command()
-@click.option('-s', '--show', type=click.Choice(['pairs', 'json']))
+@click.option('-o', '--output', type=click.Choice(['pairs', 'json']))
 @authenticated
 def authorize(identity, accounts, show=False):
     credentials = ga.auth.identity(identity)
