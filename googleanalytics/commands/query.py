@@ -31,7 +31,7 @@ from .common import authenticated, cli
     type=click.IntRange(0, 2),
     default=1)
 @click.option('-i', '--interval',
-    type=click.Choice(['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'lifetime']),
+    type=click.Choice(['hour', 'day', 'week', 'month', 'year', 'lifetime']),
     default='lifetime')
 @click.option('-o', '--output',
     type=click.Choice(['csv', 'json', 'ascii']),
@@ -42,8 +42,9 @@ from .common import authenticated, cli
     default='core',
     type=click.Choice(['core', 'realtime']))
 @authenticated
-def query(identity, accounts, metrics, precision=None,
-        dimensions=None, interval=None, filter=None, limit=False, segment=None, sort=None,
+def query(identity, accounts, metrics,
+        start=None, stop=None,
+        dimensions=None, filter=None, limit=False, segment=None,
         account=None, webproperty=None, profile=None,
         blueprint=None, debug=False, output=None,
         **description):
@@ -77,7 +78,7 @@ def query(identity, accounts, metrics, precision=None,
                 'results': report.serialize(),
             })
 
-        click.echo(json.dumps(reports, indent=2))
+        click.echo(json.dumps(reports, indent=4))
     else:
         if not (account and webproperty):
             raise ValueError("Account and webproperty needed for query.")
@@ -88,19 +89,15 @@ def query(identity, accounts, metrics, precision=None,
         if limit:
             limit = list(map(int, limit.split(',')))
 
-        description = {
-            'type': description['type'],
+        description.update({
             'range': {
-                'start': description['start'],
-                'stop': description['stop'],
+                'start': start,
+                'stop': stop,
                 },
-            'interval': interval,
-            'precision': precision,
             'metrics': utils.cut(metrics, ','),
             'dimensions': utils.cut(dimensions, ','),
             'limit': limit,
-            'sort': sort,
-            }
+            })
         query = ga.query.describe(profile, description)
 
         for f in filter:
@@ -112,4 +109,4 @@ def query(identity, accounts, metrics, precision=None,
         if debug:
             print(query.build())
 
-        print(query.serialize(format=output))
+        click.echo(query.serialize(format=output))
