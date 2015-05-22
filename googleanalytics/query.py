@@ -138,11 +138,11 @@ class Report(object):
         else:
             raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
 
-    def serialize(self, format=None):
+    def serialize(self, format=None, with_metadata=False):
         if not format:
-            return self.as_dict()
+            return self.as_dict(with_metadata=with_metadata)
         elif format == 'json':
-            return json.dumps(self.as_dict(), indent=4)
+            return json.dumps(self.as_dict(with_metadata=with_metadata), indent=4)
         elif format == 'csv':
             buf = utils.StringIO()
             writer = csv.writer(buf)
@@ -154,16 +154,32 @@ class Report(object):
             table.align = 'l'
             for row in self.rows:
                 table.add_row(row)
-            return table
+            if with_metadata:
+                return utils.format("""
+                    {title}
+                    {table}
+                    """, title=self.queries[0].title, table=table)
+            else:
+                return table
 
-    def as_dict(self):
+    def as_dict(self, with_metadata=False):
         serialized = []
         for row in self.rows:
             row = row._asdict()
             for key, value in row.items():
                 row[key] = utils.date.serialize(value)
             serialized.append(row)
-        return serialized
+
+        if with_metadata:
+            return {
+                'title': self.queries[0].title,
+                'queries': self.queries,
+                'metrics': self.metrics,
+                'dimensions': self.dimensions,
+                'results': serialized,
+                }
+        else:
+            return serialized
 
     def as_dataframe(self):
         import pandas
@@ -320,6 +336,10 @@ class Query(object):
 
         return self
 
+    # TODO: maybe do something smarter, like {granularity} {metrics}
+    # by {dimensions} for {segment}, filtered by {filters}.
+    # First {limit} results from {start} to {end} /
+    # for {start=end}, sorted by {direction} {sort}.
     @property
     def description(self):
         """

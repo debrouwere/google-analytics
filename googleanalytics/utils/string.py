@@ -9,7 +9,7 @@ except NameError:
 
 
 def format(string, **kwargs):
-    return textwrap.dedent(string).format(**kwargs)
+    return textwrap.dedent(string).format(**kwargs).strip()
 
 
 def affix(prefix, base, suffix, connector='_'):
