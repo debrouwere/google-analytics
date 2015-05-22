@@ -25,8 +25,8 @@ def from_blueprint(scope, src):
 # string parsing back into blueprint generation and query.refine
 # so they apply across the board
 def from_args(scope, metrics,
-        start=None, stop=None, limit=False,
-        dimensions=None, filter=None, segment=None,
+        start, stop, days, limit,
+        dimensions, filter, segment,
         **description):
 
     # LIMIT can be a plain limit or start and length
@@ -37,6 +37,7 @@ def from_args(scope, metrics,
         'range': {
             'start': start,
             'stop': stop,
+            'days': int(days),
             },
         'metrics': utils.cut(metrics, ','),
         'limit': limit,
@@ -61,10 +62,15 @@ def from_args(scope, metrics,
 @cli.command()
 @click.argument('metrics')
 @click.option('--dimensions')
-@click.option('--start')
+@click.option('--start',
+    help='Start date in ISO format, e.g. 2016-01-01.')
 @click.option('--stop')
-@click.option('--limit')
-@click.option('--sort')
+@click.option('--days',
+    help='Days to count forward from start date, counts backwards when negative.')
+@click.option('--limit',
+    help='Return only the first <n> or <start>,<n> results.')
+@click.option('--sort',
+    help='Sort by a metric; prefix with - to sort from high to low.')
 @click.option('--debug',
     is_flag=True)
 @click.option('--filter',
@@ -73,22 +79,25 @@ def from_args(scope, metrics,
     multiple=True)
 @click.option('--precision',
     type=click.IntRange(0, 2),
-    default=1)
+    default=1,
+    help='Increase or decrease query precision.')
 @click.option('-i', '--interval',
     type=click.Choice(['hour', 'day', 'week', 'month', 'year', 'total']),
-    default='total')
+    default='total',
+    help='Return hourly, daily etc. numbers.')
 @click.option('-o', '--output',
     type=click.Choice(['csv', 'json', 'ascii']),
-    default='ascii')
+    default='ascii',
+    help='Output format; human-readable ascii table by default.')
 @click.option('--with-metadata',
     is_flag=True)
 @click.option('-b', '--blueprint',
     type=click.File('r'))
-@click.option('-t', '--type',
-    default='core',
-    type=click.Choice(['core', 'realtime']))
+@click.option('--realtime',
+    is_flag=True,
+    help='Use the RealTime API instead of the Core API.')
 @click.pass_obj
-def query(scope, blueprint, debug, output, with_metadata, **description):
+def query(scope, blueprint, debug, output, with_metadata, realtime, **description):
     """
     e.g.
 
@@ -100,13 +109,16 @@ def query(scope, blueprint, debug, output, with_metadata, **description):
 
     """
 
+    if realtime:
+        description['type'] = 'realtime'
+
     if blueprint:
         queries = from_blueprint(scope, blueprint)
     else:
         if not isinstance(scope, ga.account.Profile):
             raise ValueError("Account and webproperty needed for query.")
 
-        queries = from_args(scope, **description)
+        queries = from_args(scope, api, **description)
 
     for query in queries:
         if debug:
