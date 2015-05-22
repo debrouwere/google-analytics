@@ -5,12 +5,9 @@ doc_fn := --include documented --markdown 5
 doc_cls := --include members.documented --markdown 5
 .PHONY: docs
 docs:
-	rm -r docs/build; mkdir docs/build
-	cp docs/Interface.md docs/build/Interface.md
-	inspect googleanalytics.auth $(doc_fn) >> docs/build/Interface.md
-	#inspect googleanalytics.account $(doc_cls) >> docs/build/Interface.md
-	inspect googleanalytics.query $(doc_cls) >> docs/build/Interface.md
-	cp docs/build/Interface.md docs/google-analytics.wiki/Interface.md
+	inspect googleanalytics.auth $(doc_fn) > docs/google-analytics.wiki/Python\ API\ Reference/auth.md
+	inspect googleanalytics.account $(doc_cls) > docs/google-analytics.wiki/Python\ API\ Reference/Account.md
+	inspect googleanalytics.query $(doc_cls) > docs/google-analytics.wiki/Python\ API\ Reference/Query.md
 	pandoc -o README.rst README.md
 
 test:
