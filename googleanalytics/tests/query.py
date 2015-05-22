@@ -39,7 +39,7 @@ class TestQuerying(base.TestCase):
 
     def test_query(self):
         """ It should be able to run a query and return a report. """
-        q = self.query('pageviews').range('2014-07-01', '2014-07-05', granularity='day')
+        q = self.query('pageviews').range('2014-07-01', '2014-07-05')
         report = q.get()
 
         self.assertTrue(report.rows)
@@ -70,7 +70,7 @@ class TestQuerying(base.TestCase):
         to query should return results. """
         base = self.query('pageviews')
         a = base.range('2014-07-01', '2014-07-03').get()
-        b = base.range('2014-07-01', '2014-07-03', granularity='day').get()
+        b = base.range('2014-07-01', '2014-07-03').interval('day').get()
         c = base.daily('2014-07-01', '2014-07-03').get()
 
         self.assertEqual(len(a), 1)
@@ -81,7 +81,7 @@ class TestQuerying(base.TestCase):
     def test_step(self):
         """ It can limit the amount of results per request. """
         q = self.query('pageviews') \
-            .range('2014-07-01', '2014-07-05', granularity='day') \
+            .range('2014-07-01', '2014-07-05').interval('day') \
             .step(2)
         report = q.get()
 
@@ -91,7 +91,7 @@ class TestQuerying(base.TestCase):
         """ It can limit the total amount of results. """
         base = self \
             .query('pageviews') \
-            .range('2014-07-01', '2014-07-05', granularity='day')
+            .range('2014-07-01', '2014-07-05').interval('day')
         full_report = base.get()
         limited_report = base.limit(2).get()
 
@@ -104,7 +104,7 @@ class TestQuerying(base.TestCase):
         index at which to start. """
         base = self \
             .query('pageviews') \
-            .range('2014-07-01', '2014-07-05', granularity='day')
+            .range('2014-07-01', '2014-07-05').interval('day')
         full_report = base.get()
         limited_report = base.limit(2, 2).get()
 
@@ -116,7 +116,7 @@ class TestQuerying(base.TestCase):
         """ It can ask the Google Analytics API for sorted results. """
         q = self \
             .query('pageviews') \
-            .range('2014-07-01', '2014-07-05', granularity='day')
+            .range('2014-07-01', '2014-07-05').interval('day')
 
         unsorted_report = q.get()
         sorted_report = q \

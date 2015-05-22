@@ -567,7 +567,62 @@ class CoreQuery(Query):
     )
 
     @utils.immutable
-    def range(self, start=None, stop=None, months=0, days=0, precision=1, granularity=None):
+    def precision(self, precision):
+        """
+        For queries that should run faster, you may specify a lower precision,
+        and for those that need to be more precise, a higher precision:
+
+        ```python
+        # faster queries
+        query.range('2014-01-01', '2014-01-31', precision=0)
+        query.range('2014-01-01', '2014-01-31', precision='FASTER')
+        # queries with the default level of precision (usually what you want)
+        query.range('2014-01-01', '2014-01-31')
+        query.range('2014-01-01', '2014-01-31', precision=1)
+        query.range('2014-01-01', '2014-01-31', precision='DEFAULT')
+        # queries that are more precise
+        query.range('2014-01-01', '2014-01-31', precision=2)
+        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')      
+        ```
+        """
+
+        if isinstance(precision, int):
+            precision = self.PRECISION_LEVELS[precision]
+
+        if precision not in self.PRECISION_LEVELS:
+            levels = ", ".join(self.PRECISION_LEVELS)
+            raise ValueError("Precision should be one of: " + levels)
+
+        if precision != 'DEFAULT':
+            self.raw.update({'samplingLevel': precision})
+
+        return self
+
+    @utils.immutable
+    def interval(self, granularity):
+        """
+        Note that if you don't specify a granularity (either through the `interval`
+        method or through the `hourly`, `daily`, `weekly`, `monthly` or `yearly`
+        shortcut methods) you will get only a single result, encompassing the
+        entire date range, per metric.
+        """
+
+        if not isinstance(granularity, int):
+            if granularity in self.GRANULARITY_LEVELS:
+                granularity = self.GRANULARITY_LEVELS.index(granularity)
+            elif granularity == 'lifetime':
+                pass
+            else:
+                levels = ", ".join(self.GRANULARITY_LEVELS)
+                raise ValueError("Granularity should be one of: lifetime, " + levels)
+
+        dimension = self.GRANULARITY_DIMENSIONS[granularity]
+        self.raw['dimensions'].insert(0, dimension)
+
+        return self
+
+    @utils.immutable
+    def range(self, start=None, stop=None, months=0, days=0):
         """
         Return a new query that fetches metrics within a certain date range.
 
@@ -590,35 +645,14 @@ class CoreQuery(Query):
         query.range('2014-01-01', days=28)
         ```
 
-        Note that if you don't specify a granularity (either through the `granularity`
-        argument or through the `hourly`, `daily`, `weekly`, `monthly` or `yearly`
+        Note that if you don't specify a granularity (either through the `interval`
+        method or through the `hourly`, `daily`, `weekly`, `monthly` or `yearly`
         shortcut methods) you will get only a single result, encompassing the
         entire date range, per metric.
 
-        For queries that should run faster, you may specify a lower precision,
-        and for those that need to be more precise, a higher precision:
-
-        ```python
-        # faster queries
-        query.range('2014-01-01', '2014-01-31', precision=0)
-        query.range('2014-01-01', '2014-01-31', precision='FASTER')
-        # queries with the default level of precision (usually what you want)
-        query.range('2014-01-01', '2014-01-31')
-        query.range('2014-01-01', '2014-01-31', precision=1)
-        query.range('2014-01-01', '2014-01-31', precision='DEFAULT')
-        # queries that are more precise
-        query.range('2014-01-01', '2014-01-31', precision=2)
-        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')      
-        ```
-
         **Note:** it is currently not possible to easily specify that you'd like
-        to query the last last full week or weeks. This will be added sometime
-        in the future.
-
-        As a stopgap measure, it is possible to use the [`nDaysAgo` format][query]
-        format for your start date.
-
-        [query]: https://developers.google.com/analytics/devguides/reporting/core/v3/reference#q_summary
+        to query the last last full week(s), month(s) et cetera.
+        This will be added sometime in the future.
         """
 
         start, stop = utils.date.range(start, stop, months, days)
@@ -628,33 +662,12 @@ class CoreQuery(Query):
             'end_date': stop,
         })
 
-        if isinstance(precision, int):
-            precision = self.PRECISION_LEVELS[precision]
-
-        if precision not in self.PRECISION_LEVELS:
-            levels = ", ".join(self.PRECISION_LEVELS)
-            raise ValueError("Precision should be one of: " + levels)
-
-        if precision != 'DEFAULT':
-            self.raw.update({'samplingLevel': precision})
-
-        if granularity:
-            if not isinstance(granularity, int):
-                if granularity in self.GRANULARITY_LEVELS:
-                    granularity = self.GRANULARITY_LEVELS.index(granularity)
-                else:
-                    levels = ", ".join(self.GRANULARITY_LEVELS)
-                    raise ValueError("Granularity should be one of: " + levels)
-
-            dimension = self.GRANULARITY_DIMENSIONS[granularity]
-            self.raw['dimensions'].insert(0, dimension)
-
         return self
+
 
     @inspector.implements(range)
     def hourly(self, *vargs, **kwargs):
-        kwargs['granularity'] = 'hour'
-        return self.range(*vargs, **kwargs)
+        return self.interval('hour').range(*vargs, **kwargs)
 
     @inspector.implements(range)
     def daily(self, *vargs, **kwargs):
@@ -664,9 +677,7 @@ class CoreQuery(Query):
         `CoreQuery#range` but it sets the default granularity to
         `granularity='day'`.
         """
-
-        kwargs['granularity'] = 'day'
-        return self.range(*vargs, **kwargs)
+        return self.interval('day').range(*vargs, **kwargs)
 
     @inspector.implements(range)
     def weekly(self, *vargs, **kwargs):
@@ -676,9 +687,7 @@ class CoreQuery(Query):
         `CoreQuery#range` but it sets the default granularity to
         `granularity='week'`.
         """
-
-        kwargs['granularity'] = 'week'
-        return self.range(*vargs, **kwargs)
+        return self.interval('week').range(*vargs, **kwargs)
 
     @inspector.implements(range)
     def monthly(self, *vargs, **kwargs):
@@ -688,9 +697,7 @@ class CoreQuery(Query):
         `CoreQuery#range` but it sets the default granularity to
         `granularity='month'`.
         """
-
-        kwargs['granularity'] = 'month'
-        return self.range(*vargs, **kwargs)
+        return self.interval('month').range(*vargs, **kwargs)
 
     @inspector.implements(range)
     def yearly(self, *vargs, **kwargs):
@@ -700,9 +707,7 @@ class CoreQuery(Query):
         `CoreQuery#range` but it sets the default granularity to
         `granularity='year'`.
         """
-
-        kwargs['granularity'] = 'year'
-        return self.range(*vargs, **kwargs)
+        return self.interval('year').range(*vargs, **kwargs)
 
     @inspector.implements(range)
     def lifetime(self, *vargs, **kwargs):
