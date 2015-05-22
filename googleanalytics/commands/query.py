@@ -27,6 +27,9 @@ from .common import authenticated, cli
     multiple=True)
 @click.option('--segment',
     multiple=True)
+@click.option('--precision',
+    type=click.IntRange(0, 2),
+    default=1)
 @click.option('-i', '--interval',
     type=click.Choice(['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'lifetime']),
     default='lifetime')
@@ -39,10 +42,10 @@ from .common import authenticated, cli
     default='core',
     type=click.Choice(['core', 'realtime']))
 @authenticated
-def query(identity, accounts, metrics,
+def query(identity, accounts, metrics, precision=None,
         dimensions=None, interval=None, filter=None, limit=False, segment=None, sort=None,
         account=None, webproperty=None, profile=None,
-        blueprint=None, debug=False, show=None,
+        blueprint=None, debug=False, output=None,
         **description):
     
     """
@@ -92,6 +95,7 @@ def query(identity, accounts, metrics,
                 'stop': description['stop'],
                 },
             'interval': interval,
+            'precision': precision,
             'metrics': utils.cut(metrics, ','),
             'dimensions': utils.cut(dimensions, ','),
             'limit': limit,
@@ -108,4 +112,4 @@ def query(identity, accounts, metrics,
         if debug:
             print(query.build())
 
-        print(query.serialize(format=show))
+        print(query.serialize(format=output))
