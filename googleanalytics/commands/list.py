@@ -3,29 +3,32 @@
 import re
 
 import click
+from prettytable import PrettyTable
 
 import googleanalytics as ga
-from .common import authenticated, cli
+from .common import cli
 
 
-def print_list(l):
-    for item in l:
-        click.echo(item)
+def table(rows, keys):
+    t = PrettyTable(keys)
+    t.align = 'l'
+    for row in rows:
+        t.add_row(ga.utils.pick(row, keys))
+    return t
 
 
+# TODO: after playing around with this, it seems like a recursive view
+# would actually be more useful, so you can see accounts, webproperties
+# and profiles all at the same time (perhaps configurable with --depth)
 @cli.command()
-@click.argument('account', required=False)
-@click.argument('webproperty', required=False)
-@authenticated
-def properties(identity, accounts, account=None, webproperty=None):
-    scope = ga.auth.navigate(accounts, account, webproperty)
-
-    if webproperty:
-        print_list(scope.profiles)
-    elif account:
-        print_list(scope.webproperties)
+@click.pass_obj
+def properties(scope):
+    if isinstance(scope, ga.account.WebProperty):
+        click.echo(table(scope.profiles, ['name', 'id']))
+    elif isinstance(scope, ga.account.Account):
+        click.echo(table(scope.webproperties, ['name', 'url', 'id']))
     else:
-        print_list(scope)
+        click.echo(table(scope, ['name', 'id']))
 
 
 def matcher(pattern):
@@ -34,14 +37,15 @@ def matcher(pattern):
     return match
 
 @cli.command()
-@click.argument('account')
 @click.argument('pattern', required=False)
-@authenticated
-def columns(identity, accounts, account, pattern=None, column_type='columns'):
-    account = accounts[account]
-    columns = getattr(account, column_type)
+@click.pass_obj
+def columns(scope, pattern=None, column_type='columns'):
+    if not isinstance(scope, ga.account.Profile):
+        raise ValueError('Please specify an account and webproperty.')
+
+    columns = getattr(scope.core, column_type)
 
     if pattern:
         columns = filter(matcher(pattern), columns)
     
-    print_list(columns)
+    click.echo(table(columns, ['name', 'slug']))

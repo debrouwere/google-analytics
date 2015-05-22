@@ -64,6 +64,19 @@ def translate(d, mapping):
 def whitelist(d, allowed):
     return {k: v for k, v in d.items() if k in allowed}
 
+# similar to whitelist, but ordered and returns only values, not keys
+def pick(obj, allowed):
+    if isinstance(obj, dict):
+        get = lambda key: obj[key]
+    else:
+        get = lambda key: getattr(obj, key)
+
+    values = []
+    for key in allowed:
+        values.append(get(key))
+
+    return values
+
 
 # test if an object is falsy or contains only falsy values
 def isempty(obj):

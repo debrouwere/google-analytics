@@ -6,16 +6,13 @@ import click
 
 import googleanalytics as ga
 from googleanalytics import utils
-from .common import authenticated, cli
+from .common import cli
 
 
 # TODO: maybe include an --interactive option, which defers
 # to `shell` but with a prefilled query?
 @cli.command()
 @click.argument('metrics')
-@click.option('--account')
-@click.option('--webproperty')
-@click.option('--profile')
 @click.option('--dimensions')
 @click.option('--start')
 @click.option('--stop')
@@ -41,11 +38,10 @@ from .common import authenticated, cli
 @click.option('-t', '--type',
     default='core',
     type=click.Choice(['core', 'realtime']))
-@authenticated
-def query(identity, accounts, metrics,
+@click.pass_obj
+def query(scope, metrics,
         start=None, stop=None,
         dimensions=None, filter=None, limit=False, segment=None,
-        account=None, webproperty=None, profile=None,
         blueprint=None, debug=False, output=None,
         **description):
     
@@ -80,10 +76,10 @@ def query(identity, accounts, metrics,
 
         click.echo(json.dumps(reports, indent=4))
     else:
-        if not (account and webproperty):
+        if not isinstance(scope, ga.account.Profile):
             raise ValueError("Account and webproperty needed for query.")
 
-        profile = ga.auth.navigate(accounts, account, webproperty, profile)
+        
 
         # LIMIT can be a plain limit or start and length
         if limit:
@@ -98,7 +94,7 @@ def query(identity, accounts, metrics,
             'dimensions': utils.cut(dimensions, ','),
             'limit': limit,
             })
-        query = ga.query.describe(profile, description)
+        query = ga.query.describe(scope, description)
 
         for f in filter:
             query = ga.query.refine(query, {'filter': dict(utils.cut(f, '=', ','))})

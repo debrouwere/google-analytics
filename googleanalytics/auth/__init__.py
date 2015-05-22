@@ -15,9 +15,7 @@ from . import keyring
 from . import oauth
 from .oauth import Flow, Credentials
 
-def navigate(accounts, account=None, webproperty=None, profile=None):
-    scope = accounts
-
+def navigate(accounts, account=None, webproperty=None, profile=None, default_profile=True):
     if webproperty and not account:
         raise KeyError("Cannot navigate to a webproperty or profile without knowing the account.")
     if profile and not (webproperty and account):
@@ -26,7 +24,11 @@ def navigate(accounts, account=None, webproperty=None, profile=None):
     if profile:
         return accounts[account].webproperties[webproperty].profiles[profile]
     elif webproperty:
-        return accounts[account].webproperties[webproperty].profile
+        scope = accounts[account].webproperties[webproperty]
+        if default_profile:
+            return scope.profile
+        else:
+            return scope
     elif account:
         return accounts[account]
     else:
@@ -118,13 +120,20 @@ def authorize(client_id=None, client_secret=None, client_email=None, private_key
 
     return credentials
 
-def revoke(client_id, client_secret, access_token=None, refresh_token=None, identity=None, prefix=None, suffix=None):
+def revoke(client_id, client_secret,
+        client_email=None, private_key=None,
+        access_token=None, refresh_token=None,
+        identity=None, prefix=None, suffix=None):
+
     """
     Given a client id, client secret and either an access token or a refresh token,
     revoke OAuth access to the Google Analytics data and remove any stored credentials
     that use these tokens.
     """
 
+    if client_email and private_key:
+        raise ValueError('Two-legged OAuth does not use revokable tokens.')
+    
     credentials = oauth.Credentials.find(
         complete=True,
         interactive=False,

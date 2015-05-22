@@ -34,8 +34,9 @@ class Account(object):
     ```
     """
 
-    def __init__(self, raw, service):
+    def __init__(self, raw, service, credentials):
         self.service = service
+        self.credentials = credentials
         self.raw = raw
         self.id = raw['id']
         self.name = raw['name']

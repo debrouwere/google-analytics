@@ -3,7 +3,7 @@
 import click
 
 import googleanalytics as ga
-from .common import authenticated, cli
+from .common import cli
 
 try:
     from IPython import embed
@@ -14,13 +14,8 @@ except ImportError:
 
 
 @cli.command()
-@click.argument('account', required=False)
-@click.argument('webproperty', required=False)
-@click.argument('profile', required=False)
-@authenticated
-def shell(identity, accounts, account=None, webproperty=None, profile=None):
-    scope = ga.auth.navigate(accounts, account, webproperty, profile)
-    
+@click.pass_obj
+def shell(scope):
     if isinstance(scope, ga.account.Profile):
         profile = scope
         account = profile.account

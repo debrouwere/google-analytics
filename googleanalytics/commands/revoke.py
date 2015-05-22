@@ -3,11 +3,10 @@
 import click
 import googleanalytics as ga
 
-from .common import authenticated, cli
+from .common import cli
 
 
 @cli.command()
-@authenticated
-def revoke(identity, accounts):
-    credentials = ga.auth.identity(identity)
-    ga.revoke(**credentials.serialize())
+@click.pass_obj
+def revoke(scope):
+    ga.revoke(**scope.account.credentials.serialize())
