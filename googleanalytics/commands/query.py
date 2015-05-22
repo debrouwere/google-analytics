@@ -75,8 +75,8 @@ def from_args(scope, metrics,
     type=click.IntRange(0, 2),
     default=1)
 @click.option('-i', '--interval',
-    type=click.Choice(['hour', 'day', 'week', 'month', 'year', 'lifetime']),
-    default='lifetime')
+    type=click.Choice(['hour', 'day', 'week', 'month', 'year', 'total']),
+    default='total')
 @click.option('-o', '--output',
     type=click.Choice(['csv', 'json', 'ascii']),
     default='ascii')

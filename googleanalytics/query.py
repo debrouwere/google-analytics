@@ -627,11 +627,12 @@ class CoreQuery(Query):
         entire date range, per metric.
         """
 
+        if granularity == 'total':
+            return self
+
         if not isinstance(granularity, int):
             if granularity in self.GRANULARITY_LEVELS:
                 granularity = self.GRANULARITY_LEVELS.index(granularity)
-            elif granularity == 'lifetime':
-                pass
             else:
                 levels = ", ".join(self.GRANULARITY_LEVELS)
                 raise ValueError("Granularity should be one of: lifetime, " + levels)
@@ -730,7 +731,7 @@ class CoreQuery(Query):
         return self.interval('year').range(*vargs, **kwargs)
 
     @inspector.implements(range)
-    def lifetime(self, *vargs, **kwargs):
+    def total(self, *vargs, **kwargs):
         return self.range(*vargs, **kwargs)
 
     @utils.immutable
