@@ -9,8 +9,8 @@ from . import base
 class TestQuerying(base.TestCase):
     def test_raw(self):
         """ It should allow people to construct raw queries. """
-        a = self.query('pageviews').range('2014-07-01', '2014-07-05')
-        b = self.query() \
+        a = self.query.metrics('pageviews').range('2014-07-01', '2014-07-05')
+        b = self.query \
             .set(metrics=['ga:pageviews']) \
             .set('start_date', '2014-07-01') \
             .set({'end_date': '2014-07-05'})
@@ -20,8 +20,8 @@ class TestQuerying(base.TestCase):
     def test_range_days(self):
         """ It should support various ways of defining date ranges,
         and these will result in the correct start and end dates. """
-        a = self.query('pageviews').range('2014-07-01', '2014-07-05')
-        b = self.query('pageviews').range('2014-07-01', days=5)
+        a = self.query.metrics('pageviews').range('2014-07-01', '2014-07-05')
+        b = self.query.metrics('pageviews').range('2014-07-01', days=5)
         
         self.assertEqual(a.raw['start_date'], '2014-07-01')
         self.assertEqual(a.raw['end_date'], '2014-07-05')
@@ -30,8 +30,8 @@ class TestQuerying(base.TestCase):
     def test_range_months(self):
         """ It should support various ways of defining date ranges,
         and these will result in the correct start and end dates. """
-        a = self.query('pageviews').range('2014-07-01', '2014-08-31')
-        b = self.query('pageviews').range('2014-07-01', months=2)
+        a = self.query.metrics('pageviews').range('2014-07-01', '2014-08-31')
+        b = self.query.metrics('pageviews').range('2014-07-01', months=2)
 
         self.assertEqual(a.raw['start_date'], '2014-07-01')
         self.assertEqual(a.raw['end_date'], '2014-08-31')
@@ -39,17 +39,17 @@ class TestQuerying(base.TestCase):
 
     def test_query(self):
         """ It should be able to run a query and return a report. """
-        q = self.query('pageviews').range('2014-07-01', '2014-07-05')
+        q = self.query.metrics('pageviews').range('2014-07-01', '2014-07-05')
         report = q.get()
 
         self.assertTrue(report.rows)
 
     def test_addressable_metrics(self):
         """ It should support multiple ways of pointing to a column. """
-        a = self.query('pageviews')
-        b = self.query('Pageviews')
-        c = self.query('ga:pageviews')
-        d = self.query(self.profile.core.columns['pageviews'])
+        a = self.query.metrics('pageviews')
+        b = self.query.metrics('Pageviews')
+        c = self.query.metrics('ga:pageviews')
+        d = self.query.metrics(self.profile.core.columns['pageviews'])
 
         self.assertEqual(a.raw, b.raw)
         self.assertEqual(b.raw, c.raw)
@@ -58,7 +58,7 @@ class TestQuerying(base.TestCase):
     def test_query_immutable(self):
         """ It should always refine queries by creating a new query and
         never modify the original base query. """
-        a = self.query('pageviews')
+        a = self.query.metrics('pageviews')
         b = a.range('2014-07-01')
 
         self.assertNotEqual(a, b)
@@ -68,7 +68,7 @@ class TestQuerying(base.TestCase):
         """ It should have shortcut functions that make it easier to
         define the granularity (hour, day, week, month, year) at which
         to query should return results. """
-        base = self.query('pageviews')
+        base = self.query.metrics('pageviews')
         a = base.range('2014-07-01', '2014-07-03').get()
         b = base.range('2014-07-01', '2014-07-03').interval('day').get()
         c = base.daily('2014-07-01', '2014-07-03').get()
@@ -80,7 +80,7 @@ class TestQuerying(base.TestCase):
 
     def test_step(self):
         """ It can limit the amount of results per request. """
-        q = self.query('pageviews') \
+        q = self.query.metrics('pageviews') \
             .range('2014-07-01', '2014-07-05').interval('day') \
             .step(2)
         report = q.get()
@@ -90,7 +90,7 @@ class TestQuerying(base.TestCase):
     def test_limit(self):
         """ It can limit the total amount of results. """
         base = self \
-            .query('pageviews') \
+            .query.metrics('pageviews') \
             .range('2014-07-01', '2014-07-05').interval('day')
         full_report = base.get()
         limited_report = base.limit(2).get()
@@ -103,7 +103,7 @@ class TestQuerying(base.TestCase):
         """ It can limit the total amount of results as well as the
         index at which to start. """
         base = self \
-            .query('pageviews') \
+            .query.metrics('pageviews') \
             .range('2014-07-01', '2014-07-05').interval('day')
         full_report = base.get()
         limited_report = base.limit(2, 2).get()
@@ -115,7 +115,7 @@ class TestQuerying(base.TestCase):
     def test_sort(self):
         """ It can ask the Google Analytics API for sorted results. """
         q = self \
-            .query('pageviews') \
+            .query.metrics('pageviews') \
             .range('2014-07-01', '2014-07-05').interval('day')
 
         unsorted_report = q.get()
@@ -135,12 +135,12 @@ class TestQuerying(base.TestCase):
         )
 
     def test_sort_additive(self):
-        q = self.query('pageviews').sort('pageviews').sort('sessions', descending=True).build()
+        q = self.query.metrics('pageviews').sort('pageviews').sort('sessions', descending=True).build()
         self.assertEqual(q['sort'], 'ga:pageviews,-ga:sessions')
 
     def test_segment_simple(self):
         """ It should support segmenting data by a segment column. """
-        q = self.query('pageviews').range('2014-07-01')
+        q = self.query.metrics('pageviews').range('2014-07-01')
         qs = q.segment('Direct Traffic')
 
         r = q.get()
@@ -149,7 +149,7 @@ class TestQuerying(base.TestCase):
         self.assertTrue(rs['pageviews'][0] <= r['pageviews'][0])
 
     def test_filter_string(self):
-        base = self.query('pageviews', 'ga:pagePath').range('2014-07-01')
+        base = self.query.metrics('pageviews').dimensions('ga:pagePath').range('2014-07-01')
         every = base.get()
         lt = base.filter('ga:pageviews<10').get()
         gt = base.filter('ga:pageviews>10').get()
@@ -162,11 +162,11 @@ class TestQuerying(base.TestCase):
         self.assertTrue(len(lt.intersection(gt)) == 0)
 
     def test_filter_keywords(self):
-        q = self.query().filter(pageviews__lt=10).build()
+        q = self.query.metrics().filter(pageviews__lt=10).build()
         self.assertEqual(q['filters'], 'ga:pageviews<10')
 
     def test_filter_additive(self):
-        q = self.query('pageviews').filter(medium=['cpc', 'cpm']).filter(usertype__neq='Returning User').build()
+        q = self.query.metrics('pageviews').filter(medium=['cpc', 'cpm']).filter(usertype__neq='Returning User').build()
         self.assertEqual(q['filters'], 'ga:medium==cpc,ga:medium==cpm;ga:userType!=Returning User')
 
 

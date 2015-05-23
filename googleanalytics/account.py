@@ -176,15 +176,11 @@ class ReportingAPI(object):
 
         # query interface
         self.report_type = self.REPORT_TYPES[endpoint]
-        self.query = functools.partial(self.QUERY_TYPES[endpoint], self)
+        Query = self.QUERY_TYPES[endpoint]
+        self.query = Query(self)
 
         # optional caching layer
         self.cache = None
-
-    @property
-    @utils.memoize
-    def columns(self):
-        return addressable.filter(columns.is_supported, self.all_columns)
 
     @property
     @utils.memoize
@@ -195,6 +191,11 @@ class ReportingAPI(object):
         raw_columns = query.execute()['items']
         hydrated_columns = utils.flatten(map(Column.from_metadata, raw_columns))
         return ColumnList(hydrated_columns, unique=False)
+
+    @property
+    @utils.memoize
+    def columns(self):
+        return addressable.filter(columns.is_supported, self.all_columns)
 
     @property
     @utils.memoize

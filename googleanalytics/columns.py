@@ -226,6 +226,7 @@ class ColumnList(addressable.List):
         options['insensitive'] = True
         super(ColumnList, self).__init__(**options)
 
+    @utils.vectorize
     def normalize(self, value):
         if isinstance(value, self.COLUMN_TYPE):
             return value

@@ -37,7 +37,7 @@ def from_args(scope, metrics,
         'range': {
             'start': start,
             'stop': stop,
-            'days': int(days),
+            'days': days,
             },
         'metrics': utils.cut(metrics, ','),
         'limit': limit,
@@ -66,7 +66,9 @@ def from_args(scope, metrics,
     help='Start date in ISO format, e.g. 2016-01-01.')
 @click.option('--stop')
 @click.option('--days',
-    help='Days to count forward from start date, counts backwards when negative.')
+    help='Days to count forward from start date, counts backwards when negative.',
+    default=0,
+    type=int)
 @click.option('--limit',
     help='Return only the first <n> or <start>,<n> results.')
 @click.option('--sort',
@@ -118,7 +120,7 @@ def query(scope, blueprint, debug, output, with_metadata, realtime, **descriptio
         if not isinstance(scope, ga.account.Profile):
             raise ValueError("Account and webproperty needed for query.")
 
-        queries = from_args(scope, api, **description)
+        queries = from_args(scope, **description)
 
     for query in queries:
         if debug:

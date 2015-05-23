@@ -240,6 +240,11 @@ def select(source, selection):
     return selections
 
 
+# TODO: refactor `raw` into `parameters`, with serialization
+# (stringification) happening in one place, in `Query#build`
+# and removing empty keys as necessary
+# TODO: consider whether to pass everything through `Query#set`
+# or otherwise avoid having two paths to modifying `raw`
 class Query(object):
     """
     Return a query for certain metrics and dimensions.
@@ -271,19 +276,23 @@ class Query(object):
 
     _lock = 0
 
-    def __init__(self, api, metrics=[], dimensions=[], meta=None, title=None):
+    def __init__(self, api, parameters={}, metadata={}, title=None):
         self._title = title
-        self.raw = {'ids': 'ga:' + api.profile.id}
+        self.raw = {
+            'ids': 'ga:' + api.profile.id,
+            'metrics': [],
+            'dimensions': [],
+            }
+        self.raw.update(parameters)
         self.meta = {}
-        self.meta.update(meta or {})
+        self.meta.update(metadata)
         self.api = api
         self.profile = api.profile
         self.webproperty = api.profile.webproperty
         self.account = api.profile.webproperty.account
         self._report = None
-        self._specify(metrics=metrics, dimensions=dimensions)
 
-    # no not execute more than one query per second
+    # do not execute more than one query per second
     def _wait(self):
         now = time.time()
         elapsed = now - self._lock
@@ -297,8 +306,11 @@ class Query(object):
         return self.account.service.data().ga()
 
     def clone(self):
-        query = self.__class__(api=self.api, meta=self.meta)
-        query.raw = deepcopy(self.raw)
+        query = self.__class__(
+            api=self.api,
+            parameters=deepcopy(self.raw),
+            metadata=deepcopy(self.meta),
+            )
         return query
 
     @utils.immutable
@@ -325,14 +337,15 @@ class Query(object):
 
         return self
 
-    def _specify(self, metrics=[], dimensions=[]):
-        serialize = partial(self.api.columns.serialize, wrap=True)
-
-        metrics = serialize(metrics)
-        dimensions = serialize(dimensions)
-        self.raw.setdefault('metrics', []).extend(metrics)
-        self.raw.setdefault('dimensions', []).extend(dimensions)
-
+    @utils.immutable
+    def columns(self, required_type=None, *values):
+        for column in self.api.columns.normalize(values, wrap=True):
+            if required_type and required_type != column.type:
+                raise ValueError('Tried to add {type} but received: {column}'.format(
+                    type=required_type,
+                    column=column,
+                    ))
+            self.raw[column.type + 's'].append(column.id)
         return self
 
     # TODO: maybe do something smarter, like {granularity} {metrics}
@@ -345,7 +358,7 @@ class Query(object):
         A list of the metrics this query will ask for.
         """
 
-        if len(self.raw['metrics']):
+        if 'metrics' in self.raw:
             metrics = self.raw['metrics']
             head = metrics[0:-1] or metrics[0:1]
             text = ", ".join(head)
@@ -365,20 +378,6 @@ class Query(object):
     def title(self, value):
         self._title = value
 
-    @inspector.implements(_specify)
-    @utils.immutable
-    def query(self, *vargs, **kwargs):
-        """
-        Return a new query with additional metrics and dimensions.
-        If specifying only a single metric or dimension, you can
-        but are not required to wrap it in a list.
-
-        This interface is identical to the one you use to construct
-        new queries, `Profile#query`. Look there for more details.
-        """
-        return self._specify(*vargs, **kwargs)
-
-    @utils.immutable
     def metrics(self, *metrics):
         """
         Return a new query with additional metrics.
@@ -387,9 +386,8 @@ class Query(object):
         query.metrics('pageviews', 'page load time')
         ```
         """
-        return self._specify(metrics=metrics)
+        return self.columns('metric', *metrics)
 
-    @utils.immutable
     def dimensions(self, *dimensions):
         """
         Return a new query with additional dimensions.
@@ -398,7 +396,7 @@ class Query(object):
         query.dimensions('search term', 'search depth')
         ```
         """
-        return self._specify(dimensions=dimensions)
+        return self.columns('dimension', *dimensions)
 
     @utils.immutable
     def sort(self, *columns, **options):
@@ -558,13 +556,12 @@ class CoreQuery(Query):
     * `metrics` and `dimensions` (both of which you can also pass as
       lists when creating the query)
     * `range` and its shortcuts that have the granularity already set:
-      `hourly`, `daily`, `weekly`, `monthly`, `yearly`
+      `hourly`, `daily`, `weekly`, `monthly`, `yearly`, `total`
     * `filter` to filter which rows are analyzed before running the query
     * `segment` to filter down to a certain kind of session or user (as
       opposed to `filter` which works on individual rows of data)
     * `limit` to ask for a subset of results
     * `sort` to sort the query
-
 
     CoreQuery is mostly immutable: wherever possible, methods
     return a new query rather than modifying the existing one,
@@ -991,7 +988,7 @@ def describe(profile, description):
     """
     api_type = description.pop('type', 'core')
     api = getattr(profile, api_type)
-    return refine(api.query(), description)
+    return refine(api.query, description)
 
 def refine(query, description):
     """
