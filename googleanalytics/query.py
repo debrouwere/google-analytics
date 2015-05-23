@@ -588,7 +588,7 @@ class CoreQuery(Query):
         'ga:year', 'ga:yearMonth', 'ga:yearWeek',
         'ga:date', 'ga:dateHour',
     )
-
+    
     @utils.immutable
     def precision(self, precision):
         """
