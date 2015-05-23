@@ -893,7 +893,7 @@ class CoreQuery(Query):
     def users(self, **kwargs):
         return self.segment(scope='users', **kwargs)
 
-    def sessions(self):
+    def sessions(self, **kwargs):
         return self.segment(scope='sessions', **kwargs)
 
     @utils.immutable
