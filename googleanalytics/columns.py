@@ -221,7 +221,7 @@ class ColumnList(addressable.List):
     def __init__(self, columns, **options):
         options['items'] = columns
         options['name'] = self.COLUMN_TYPE.__class__.__name__
-        options['indices'] = ('id', 'name', 'slug')
+        options['indices'] = ('name', 'id', 'slug', 'pyslug')
         options['insensitive'] = True
         super(ColumnList, self).__init__(**options)
 
