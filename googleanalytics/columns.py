@@ -191,6 +191,7 @@ class Segment(Column):
         self.raw = raw
         self.id = raw['segmentId']
         self.report_type, self.slug = self.id.split('::')
+        self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']
