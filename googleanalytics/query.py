@@ -299,7 +299,6 @@ class Query(object):
     def clone(self):
         query = self.__class__(api=self.api, meta=self.meta)
         query.raw = deepcopy(self.raw)
-        query._report = None
         return query
 
     @utils.immutable
@@ -533,7 +532,11 @@ class Query(object):
 
     # lazy-loading shortcuts
     def __getattr__(self, name):
-        if hasattr(self.report, name):
+        # IPython shell display should not trigger lazy-loading
+        # (arguably this is an IPython issue and not our problem, but let's be pragmatic)
+        if name == '_ipython_display_':
+            raise AttributeError('Query objects have no custom IPython display behavior')
+        elif hasattr(self.report, name):
             return getattr(self.report, name)
         else:
             raise AttributeError("'{cls}' object and its associated 'Report' object have no attribute '{name}'".format(
