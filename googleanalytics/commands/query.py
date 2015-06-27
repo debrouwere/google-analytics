@@ -103,10 +103,10 @@ def query(scope, blueprint, debug, output, with_metadata, realtime, **descriptio
     """
     e.g.
 
-        googleanalytics query pageviews \
+        googleanalytics --identity debrouwere --account debrouwere --webproperty http://debrouwere.org \
+            query pageviews \
             --start yesterday --limit -10 --sort -pageviews \
             --dimensions pagepath \
-            --identity debrouwere --account debrouwere --webproperty http://debrouwere.org \
             --debug
 
     """
