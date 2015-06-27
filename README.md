@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/debrouwere/google-analytics.svg)](https://travis-ci.org/debrouwere/google-analytics)
 
-`google-analytics` takes the pain out of working with the Google Analytics reporting APIs. It supports both the Core and the Real Time API. It is written in Python but there's also a command-line interface.
+`google-analytics` takes the pain out of working with the Google Analytics reporting APIs. It supports both the Core and the Real Time API. It is written in Python but there's also a full-featured command-line interface.
 
 (The goal is for the command-line interface to have feature parity with the Python interface. We're working on it.)
 
@@ -34,6 +34,13 @@ accounts = ga.authenticate()
 profile = accounts[0].webproperties[0].profile
 pageviews = profile.core.query('pageviews').range('yesterday').value
 print(pageviews)
+```
+
+Or on the command-line, that'd be:
+
+```shell
+googleanalytics --identity <identity> --account <account> --webproperty <webproperty> \
+    query pageviews --start yesterday
 ```
 
 The account, webproperty and profile determine what data you'll be querying. Learn more about profiles and querying on the [Querying](https://github.com/debrouwere/google-analytics/wiki/Querying) wiki page, or alternatively look at the [Common Queries](https://github.com/debrouwere/google-analytics/wiki/Common-Queries) page for lots of examples. Read more about how to work with the resulting data in [Working With Reports](https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports).
