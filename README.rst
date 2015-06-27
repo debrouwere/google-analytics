@@ -5,7 +5,8 @@ Google Analytics for Python and the command-line
 
 ``google-analytics`` takes the pain out of working with the Google
 Analytics reporting APIs. It supports both the Core and the Real Time
-API. It is written in Python but there's also a command-line interface.
+API. It is written in Python but there's also a full-featured
+command-line interface.
 
 (The goal is for the command-line interface to have feature parity with
 the Python interface. We're working on it.)
@@ -55,6 +56,13 @@ After that, executing your first query is as easy as
     profile = accounts[0].webproperties[0].profile
     pageviews = profile.core.query('pageviews').range('yesterday').value
     print(pageviews)
+
+Or on the command-line, that'd be:
+
+.. code:: shell
+
+    googleanalytics --identity <identity> --account <account> --webproperty <webproperty> \
+        query pageviews --start yesterday
 
 The account, webproperty and profile determine what data you'll be
 querying. Learn more about profiles and querying on the
