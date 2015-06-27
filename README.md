@@ -4,12 +4,11 @@
 
 `google-analytics` takes the pain out of working with the Google Analytics reporting APIs. It supports both the Core and the Real Time API. It is written in Python but there's also a full-featured command-line interface.
 
-(The goal is for the command-line interface to have feature parity with the Python interface. We're working on it.)
-
 * **Authentication.** OAuth2 is a bit of a pain and we've made it easier, both for interactive use and for [server applications][rauth]. We can also save your credentials in the operating system's keychain if you want to.
 * **Querying.** Easier to query per week, month or year. Query using metric IDs or using their full names, whichever you think is nicer. Work with both the Core and the Real Time APIs.
 * **Reporting.** Generate reports from the command-line. Optionally describe reports and queries in [easy-to-read and easy-to-write YAML files][yaml]. Reports in Python work better too: iterate through the entire report or column-per-column.
 * **Exploration.** Traverse the account hierarchy from account to webproperty to profile to dimensions, both programmatically and with the included command-line interface.
+* **Exports.** Clean JSON and CSV – as well as [Pandas](http://pandas.pydata.org/) data frames – so you can analyze the data in anything from Excel to R.
 
 This package is built on top of [Google's own API client for Python][apiclient].
 
@@ -43,7 +42,7 @@ googleanalytics --identity <identity> --account <account> --webproperty <webprop
     query pageviews --start yesterday
 ```
 
-The account, webproperty and profile determine what data you'll be querying. Learn more about profiles and querying on the [Querying](https://github.com/debrouwere/google-analytics/wiki/Querying) wiki page, or alternatively look at the [Common Queries](https://github.com/debrouwere/google-analytics/wiki/Common-Queries) page for lots of examples. Read more about how to work with the resulting data in [Working With Reports](https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports).
+The account, webproperty and profile determine what data you'll be querying. Learn more about profiles and querying on the [Querying](https://github.com/debrouwere/google-analytics/wiki/Querying) wiki page, or alternatively look at the [Common Queries](https://github.com/debrouwere/google-analytics/wiki/Common-Queries) page for lots of examples. Read more about how to work with the resulting data in [Working With Reports](https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports). [On The Command-Line](https://github.com/debrouwere/google-analytics/wiki/On-The-Command-Line) has more details about the command-line application.
 
 The example above will authorize the app and authenticate you interactively. It is also possible to pass credentials
 as arguments in Python, using environment variables or from your operating system's keychain. Authentication is treated in much more depth on the [authentication wiki page](https://github.com/debrouwere/google-analytics/wiki/Authentication).

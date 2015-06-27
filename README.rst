@@ -8,9 +8,6 @@ Analytics reporting APIs. It supports both the Core and the Real Time
 API. It is written in Python but there's also a full-featured
 command-line interface.
 
-(The goal is for the command-line interface to have feature parity with
-the Python interface. We're working on it.)
-
 -  **Authentication.** OAuth2 is a bit of a pain and we've made it
    easier, both for interactive use and for `server
    applications <https://github.com/debrouwere/google-analytics/blob/master/examples/server.py>`__.
@@ -27,6 +24,9 @@ the Python interface. We're working on it.)
 -  **Exploration.** Traverse the account hierarchy from account to
    webproperty to profile to dimensions, both programmatically and with
    the included command-line interface.
+-  **Exports.** Clean JSON and CSV – as well as
+   `Pandas <http://pandas.pydata.org/>`__ data frames – so you can
+   analyze the data in anything from Excel to R.
 
 This package is built on top of `Google's own API client for
 Python <https://developers.google.com/api-client-library/python/start/installation>`__.
@@ -72,6 +72,9 @@ Queries <https://github.com/debrouwere/google-analytics/wiki/Common-Queries>`__
 page for lots of examples. Read more about how to work with the
 resulting data in `Working With
 Reports <https://github.com/debrouwere/google-analytics/wiki/Working-With-Reports>`__.
+`On The
+Command-Line <https://github.com/debrouwere/google-analytics/wiki/On-The-Command-Line>`__
+has more details about the command-line application.
 
 The example above will authorize the app and authenticate you
 interactively. It is also possible to pass credentials as arguments in
