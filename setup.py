@@ -7,13 +7,14 @@ setup(name='googleanalytics',
     author_email='stijn@debrouwere.org',
     url='https://github.com/debrouwere/google-analytics/',
     download_url='http://www.github.com/debrouwere/google-analytics/tarball/master',
-    version='0.21.0',
+    version='0.21.1',
     license='ISC',
     packages=find_packages(),
     keywords='data analytics api wrapper google',
     scripts=[
         'bin/googleanalytics'
     ],
+    include_package_data=True,
     install_requires=[
         'oauth2client>=1.4.6',
         'google-api-python-client==1.4',
