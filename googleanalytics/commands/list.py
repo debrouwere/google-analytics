@@ -38,12 +38,20 @@ def matcher(pattern):
 
 @cli.command()
 @click.argument('pattern', required=False)
+@click.option('--realtime',
+    is_flag=True,
+    help='Use the RealTime API instead of the Core API.')
 @click.pass_obj
-def columns(scope, pattern=None, column_type='columns'):
+def columns(scope, pattern=None, realtime=False, column_type='columns'):
     if not isinstance(scope, ga.account.Profile):
         raise ValueError('Please specify an account and webproperty.')
 
-    columns = getattr(scope.core, column_type)
+    if realtime:
+        api = scope.realtime
+    else:
+        api = scope.core
+
+    columns = getattr(api, column_type)
 
     if pattern:
         columns = filter(matcher(pattern), columns)
