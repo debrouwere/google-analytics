@@ -1,4 +1,5 @@
 import datetime
+import re
 
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
@@ -37,7 +38,7 @@ def parse_description(s):
     else:
         match = re.match('(\d+)daysAgo', s)
         if match:
-            return today - relativedelta(days=match.group(1))
+            return today - relativedelta(days=int(match.group(1)))
         else:
             raise ValueError("Can only parse descriptions of the format: today, yesterday, ndaysAgo")
 
