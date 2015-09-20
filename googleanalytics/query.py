@@ -211,7 +211,21 @@ class Report(object):
         return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
 
 
-def select(source, selection):
+EXCLUSION = {
+    'eq': 'neq',
+    'neq': 'eq',
+    'gt': 'lte',
+    'lt': 'gte',
+    'gte': 'lt',
+    'lte': 'gt',
+    're': 'nre',
+    'nre': 're',
+    'contains': 'ncontains',
+    'ncontains': 'contains',
+}
+
+
+def select(source, selection, invert=False):
     selections = []
     for key, values in selection.items():
         if '__' in key:
@@ -225,6 +239,9 @@ def select(source, selection):
                 method=method,
                 options=', '.join(Column.selectors),
                 ))
+
+        if invert:
+            method = EXCLUSION[method]
 
         column = source[column]
         selector = getattr(column, method)
@@ -443,7 +460,7 @@ class Query(object):
         return self
 
     @utils.immutable
-    def filter(self, value=None, **selection):
+    def filter(self, value=None, exclude=False, **selection):
         """ Most of the actual functionality lives on the Column
         object and the `all` and `any` functions. """
         filters = self.meta.setdefault('filters', [])
@@ -453,11 +470,14 @@ class Query(object):
         elif value:
             value = [value]
         elif len(selection):
-            value = select(self.api.columns, selection)
+            value = select(self.api.columns, selection, invert=exclude)
 
         filters.append(value)
         self.raw['filters'] = utils.paste(filters, ',', ';')
         return self
+
+    def exclude(self, **selection):
+        return self.filter(exclude=True, **selection)
 
     def build(self, copy=True):
         if copy:
