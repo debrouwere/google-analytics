@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+import codecs
 
 setup(name='googleanalytics',
     description='A wrapper for the Google Analytics API.',
-    long_description=open('README.rst').read(),
+    long_description=codecs.open('README.rst', 'r', 'utf-8').read(),
     author='Stijn Debrouwere',
     author_email='stijn@debrouwere.org',
     url='https://github.com/debrouwere/google-analytics/',
