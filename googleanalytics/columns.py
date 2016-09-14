@@ -23,17 +23,23 @@ DIMENSIONS = {
     'ga:dateHour': lambda date: utils.date.parse('{} {}'.format(date[:8], date[8:])),
 }
 
+PYSLUG_OVERRIDES = {
+    '1dayUsers': 'active1dayUsers',
+    '7dayUsers': 'active7dayUsers',
+    '14dayUsers': 'active14dayUsers',
+    '30dayUsers': 'active30dayUsers',
+}
 
 def escape_chars(value, chars=',;'):
     if value is True:
         return 'Yes'
     elif value is False:
         return 'No'
-    
+
     value = utils.unicode(value)
     for char in chars:
         value = value.replace(char, '\\' + char)
-    
+
     return value
 
 def escape(method):
@@ -42,6 +48,12 @@ def escape(method):
         values = utils.builtins.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
+
+def pyslug(name):
+    """
+    Make name safe to use as an attribute name (Python identifier).
+    """
+    return PYSLUG_OVERRIDES.get(name) or re.sub(r'([A-Z])', r'_\1', name).lower()
 
 
 class Column(object):
@@ -85,7 +97,7 @@ class Column(object):
             self.index = int(index.group(0))
         else:
             self.index = None
-        self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
+        self.pyslug = pyslug(self.slug)
         self.attributes = attributes
         self.name = attributes.get('uiName', column_id).replace('XX', str(self.index))
         self.group = attributes.get('group')
@@ -191,7 +203,7 @@ class Segment(Column):
         self.raw = raw
         self.id = raw['segmentId']
         self.report_type, self.slug = self.id.split('::')
-        self.pyslug = re.sub(r'([A-Z])', r'_\1', self.slug).lower()
+        self.pyslug = pyslug(self.slug)
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']
