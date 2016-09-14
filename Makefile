@@ -14,7 +14,7 @@ docs: readme
 	inspect googleanalytics.query $(doc_cls) > docs/google-analytics.wiki/Python\ API\ Reference/Query.md
 
 test:
-	python setup.py test
+	python3 setup.py test
 
 wiki: docs
 	cd docs/google-analytics.wiki && git add . --all && \
