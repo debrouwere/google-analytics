@@ -54,7 +54,7 @@ After that, executing your first query is as easy as
     import googleanalytics as ga
     accounts = ga.authenticate()
     profile = accounts[0].webproperties[0].profile
-    pageviews = profile.core.query('pageviews').range('yesterday').value
+    pageviews = profile.core.query.metrics('pageviews').range('yesterday').value
     print(pageviews)
 
 Or on the command-line, that'd be:
