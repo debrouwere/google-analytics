@@ -24,10 +24,10 @@ DIMENSIONS = {
 }
 
 PYSLUG_OVERRIDES = {
-    '1dayUsers': 'active_1day_users',
-    '7dayUsers': 'active_7day_users',
-    '14dayUsers': 'active_14day_users',
-    '30dayUsers': 'active_30day_users',
+    '1dayUsers': 'active1dayUsers',
+    '7dayUsers': 'active7dayUsers',
+    '14dayUsers': 'active14dayUsers',
+    '30dayUsers': 'active30dayUsers',
 }
 
 def escape_chars(value, chars=',;'):
@@ -35,11 +35,11 @@ def escape_chars(value, chars=',;'):
         return 'Yes'
     elif value is False:
         return 'No'
-    
+
     value = utils.unicode(value)
     for char in chars:
         value = value.replace(char, '\\' + char)
-    
+
     return value
 
 def escape(method):
@@ -48,7 +48,6 @@ def escape(method):
         values = utils.builtins.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
-
 
 def pyslug(name):
     """
