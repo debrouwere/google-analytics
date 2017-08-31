@@ -3,22 +3,22 @@
 """
 """
 
-from copy import deepcopy
+import collections
+import csv
 import hashlib
 import json
-import yaml
-import csv
-import prettytable
-import collections
 import time
+from copy import deepcopy
 from functools import partial
 
 import addressable
 import inspector
+import yaml
 
+import prettytable
+
+from . import errors, utils
 from .columns import Column, Segment
-from . import utils
-from . import errors
 
 
 class Report(object):
@@ -73,31 +73,34 @@ class Report(object):
         self.queries = []
 
         registry = query.api.all_columns
-        headers = [registry[header['name']] for header in raw['columnHeaders']]
-        self.slugs = [header.pyslug for header in headers]
         self.names = [header.name for header in headers]
-        self.row_cls = collections.namedtuple('Row', self.slugs)
-        self.headers = addressable.List(headers,
+        self.columns = addressable.List([self.registry[header['name']] for header in raw['columnHeaders']],
             indices=registry.indexed_on, insensitive=True)
-        self.metrics = set()
-        self.dimensions = set()
+        self.metrics = [column for column in columns if column.type == 'metric']
+        self.dimensions = [column for column in columns if column.type == 'dimension']
+        slugs = [column.python_slug for column in self.columns]
+        self.Row = collections.namedtuple('Row', slugs)
+        # TODO: remove after testing
+        #self.metrics = set()
+        #self.dimensions = set()
         self.rows = []
         self.append(raw, query)
 
     def append(self, raw, query):
         self.raw.append(raw)
         self.queries.append(query)
-        self.metrics.update(query.raw['metrics'])
-        self.dimensions.update(query.raw.get('dimensions', []))
+        # TODO: remove after testing
+        #self.metrics.update(query.raw['metrics'])
+        #self.dimensions.update(query.raw.get('dimensions', []))
         self.is_complete = not 'nextLink' in raw
 
-        casters = [column.cast for column in self.headers]
+        casters = [column.cast for column in self.columns]
 
         # if no rows were returned, the GA API doesn't
         # include the `rows` key at all
         for row in self.raw[-1].get('rows', []):
-            typed_row = [casters[i](row[i]) for i in range(len(self.headers))]
-            typed_tuple = self.row_cls(*typed_row)
+            typed_row = [casters[i](row[i]) for i in range(len(self.columns))]
+            typed_tuple = self.Row(*typed_row)
             self.rows.append(typed_tuple)
 
         # TODO: figure out how this works with paginated queries
@@ -133,12 +136,68 @@ class Report(object):
     def values(self):
         if len(self.metrics) == 1:
             raw_metric = list(self.metrics).pop()
-            metric = self.headers[raw_metric]
+            metric = self.columns[raw_metric]
             return self[metric]
         else:
             raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
 
+    # TODO: it'd be nice to have metadata from `ga` available as
+    # properties, rather than only having them in serialized form
+    # (so e.g. the actual metric objects with both serialized name, slug etc.)
+    def __expand(report):
+        # 1. generate grid
+        # 1a. generate date grid
+        #report.queries[0].raw['start_date']
+        #report.queries[0].raw['end_date']
+        since = datetime.strptime(report.queries[0].raw['start_date'], '%Y-%m-%d')
+        until = datetime.strptime(report.queries[0].raw['end_date'], '%Y-%m-%d') + relativedelta(days=1)
+        # TODO: it is possible to request multiple of these columns as dimensions,
+        # in which case the most granular of them should be extracted
+        time_column = {'year', 'year_month', 'year_week', 'date', 'date_hour'}.intersection(set(report.slugs)).pop()
+        time_step = INTERVALS[time_column]
+        time_ix = report.slugs.index(time_column)
+        #time_interval = ranges.date.interval(since, until)
+        time_interval = (since, until)
+        time_range = list(ranges.date.range(*time_interval, **time_step))
+        # TODO
+        time_slug = 'ga:dateHour'
+
+        # 1b. generate dimension factor grid
+        factors = {dimension: set(report[dimension]) for dimension in set(report.dimensions) - {time_slug}}
+
+        # 1c. assemble grid
+        grid = list(itertools.product(time_range, *factors.values()))
+
+        # 2. fill in the grid with available data
+        ndim = len(report.dimensions)
+        index = path(report.rows, *report.slugs[:ndim])
+
+        filled = []
+
+        for row in grid:
+            try:
+                # navigate to data (if it exists)
+                index_columns = row[:ndim]
+                data = index
+                for column in index_columns:
+                    data = data[column]
+                filled.append(data)
+            except KeyError:
+                # TODO: for some metrics (in particular averages)
+                # the default value should be None, for most others
+                # it should be zero
+                row_metrics = [None] * len(report.metrics)
+                filler = list(row) + row_metrics
+                row = report.Row(*filler)
+                filled.append(row)
+
+        report.rows = filled
+        return report
+
+
     def serialize(self, format=None, with_metadata=False):
+        names = [column.name for column in self.columns]
+
         if not format:
             return self.as_dict(with_metadata=with_metadata)
         elif format == 'json':
@@ -146,11 +205,11 @@ class Report(object):
         elif format == 'csv':
             buf = utils.StringIO()
             writer = csv.writer(buf)
-            writer.writerow(self.names)
+            writer.writerow(names)
             writer.writerows(self.rows)
             return buf.getvalue()
         elif format == 'ascii':
-            table = prettytable.PrettyTable(self.names)
+            table = prettytable.PrettyTable(names)
             table.align = 'l'
             for row in self.rows:
                 table.add_row(row)
@@ -174,8 +233,8 @@ class Report(object):
             return {
                 'title': self.queries[0].title,
                 'queries': self.queries,
-                'metrics': self.metrics,
-                'dimensions': self.dimensions,
+                'metrics': [column.name for column in self.metrics],
+                'dimensions': [column.name for column in self.dimensions],
                 'results': serialized,
                 }
         else:
@@ -191,7 +250,7 @@ class Report(object):
         try:
             if isinstance(key, Column):
                 key = key.slug
-            i = self.headers.index(key)
+            i = self.columns.index(key)
             return [row[i] for row in self.rows]
         except ValueError:
             raise ValueError(key + " not in column headers")
@@ -207,8 +266,14 @@ class Report(object):
     # "pageviews by day, browser"
     # (also see `title` and `description` on query objects)
     def __repr__(self):
-        headers = [header.name for header in self.headers]
-        return '<googleanalytics.query.Report object: {}'.format(', '.join(headers))
+        metrics = ', '.join([header.name for header in self.metrics])
+        dimensions = ','.join([header.name for header in self.dimensions])
+        if len(dimensions):
+            return '<googleanalytics.query.Report object: {} by {}'.format(
+                metrics, dimensions)
+        else:
+            return '<googleanalytics.query.Report object: {}'.format(
+                metrics)
 
 
 EXCLUSION = {
@@ -486,7 +551,7 @@ class Query(object):
             raw = self.raw
 
         raw['metrics'] = ','.join(self.raw['metrics'])
-        
+
         if len(raw['dimensions']):
             raw['dimensions'] = ','.join(self.raw['dimensions'])
         else:
@@ -601,7 +666,7 @@ class CoreQuery(Query):
         'ga:year', 'ga:yearMonth', 'ga:yearWeek',
         'ga:date', 'ga:dateHour',
     )
-    
+
     @utils.immutable
     def precision(self, precision):
         """
@@ -618,7 +683,7 @@ class CoreQuery(Query):
         query.range('2014-01-01', '2014-01-31', precision='DEFAULT')
         # queries that are more precise
         query.range('2014-01-01', '2014-01-31', precision=2)
-        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')      
+        query.range('2014-01-01', '2014-01-31', precision='HIGHER_PRECISION')
         ```
         """
 
@@ -867,7 +932,7 @@ class CoreQuery(Query):
         condition::perHit::ga:timeOnPage>5
         ->>
         ga:deviceCategory==mobile;ga:revenue>10;
-        
+
         users::sequence::ga:deviceCategory==desktop
         ->>
         ga:deviceCategory=mobile;
@@ -1033,5 +1098,5 @@ def refine(query, description):
                 query = method(arguments)
         else:
             setattr(attribute, arguments)
-    
+
     return query
