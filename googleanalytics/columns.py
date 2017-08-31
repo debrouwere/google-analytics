@@ -1,13 +1,14 @@
 # encoding: utf-8
 
-import re
 import functools
+import re
 
 import addressable
-from addressable import map, filter
+from addressable import filter, map
+
+from snakify import snakify
 
 from . import utils
-
 
 TYPES = {
     'STRING': utils.unicode,
@@ -21,13 +22,6 @@ TYPES = {
 DIMENSIONS = {
     'ga:date': lambda date: utils.date.parse(date).date(),
     'ga:dateHour': lambda date: utils.date.parse('{} {}'.format(date[:8], date[8:])),
-}
-
-PYSLUG_OVERRIDES = {
-    '1dayUsers': 'active1dayUsers',
-    '7dayUsers': 'active7dayUsers',
-    '14dayUsers': 'active14dayUsers',
-    '30dayUsers': 'active30dayUsers',
 }
 
 def escape_chars(value, chars=',;'):
@@ -48,12 +42,6 @@ def escape(method):
         values = utils.builtins.map(escape_chars, values)
         return method(self, *values)
     return escaped_method
-
-def pyslug(name):
-    """
-    Make name safe to use as an attribute name (Python identifier).
-    """
-    return PYSLUG_OVERRIDES.get(name) or re.sub(r'([A-Z])', r'_\1', name).lower()
 
 
 class Column(object):
@@ -97,7 +85,7 @@ class Column(object):
             self.index = int(index.group(0))
         else:
             self.index = None
-        self.pyslug = pyslug(self.slug)
+        self.python_slug = snakify(self.slug)
         self.attributes = attributes
         self.name = attributes.get('uiName', column_id).replace('XX', str(self.index))
         self.group = attributes.get('group')
@@ -203,7 +191,7 @@ class Segment(Column):
         self.raw = raw
         self.id = raw['segmentId']
         self.report_type, self.slug = self.id.split('::')
-        self.pyslug = pyslug(self.slug)
+        self.python_slug = snakify(self.slug)
         self.name = raw['name']
         self.kind = raw['kind'].lower()
         self.definition = raw['definition']
@@ -234,7 +222,7 @@ class ColumnList(addressable.List):
     def __init__(self, columns, **options):
         options['items'] = columns
         options['name'] = self.COLUMN_TYPE.__class__.__name__
-        options['indices'] = ('name', 'id', 'slug', 'pyslug')
+        options['indices'] = ('name', 'id', 'slug', 'python_slug')
         options['insensitive'] = True
         super(ColumnList, self).__init__(**options)
 

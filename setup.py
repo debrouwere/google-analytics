@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import codecs
+
+from setuptools import find_packages, setup
 
 setup(name='googleanalytics',
     description='A wrapper for the Google Analytics API.',
@@ -8,7 +9,7 @@ setup(name='googleanalytics',
     author_email='stijn@debrouwere.org',
     url='https://github.com/debrouwere/google-analytics/',
     download_url='http://www.github.com/debrouwere/google-analytics/tarball/master',
-    version='0.23.0',
+    version='0.24.0',
     license='ISC',
     packages=find_packages(),
     keywords='data analytics api wrapper google',
@@ -28,6 +29,7 @@ setup(name='googleanalytics',
         'pyyaml>=3',
         'prettytable>=0.7',
         'colorama>=0.3',
+        'snakify>=1.1',
     ],
     test_suite='googleanalytics.tests',
     classifiers=[
