@@ -5,6 +5,7 @@
 
 import collections
 import csv
+from datetime import datetime
 import hashlib
 import json
 import time
@@ -14,11 +15,38 @@ from functools import partial
 import addressable
 import inspector
 import yaml
-
+from dateutil.relativedelta import relativedelta
 import prettytable
 
 from . import errors, utils
-from .columns import Column, Segment
+from .columns import Column, ColumnList, Segment
+
+
+INTERVAL_TIMEDELTAS = {
+    'year': dict(years=1),
+    'year_month': dict(months=1),
+    'year_week': dict(weeks=1),
+    'date': dict(days=1),
+    'date_hour': dict(hours=1),
+}
+
+def path(l, *keys):
+    indexed = {}
+    for el in l:
+        branch = indexed
+        for key in keys[:-1]:
+            value = getattr(el, key)
+            branch = branch.setdefault(value, {})
+        value = getattr(el, keys[-1])
+        branch.setdefault(value, el)
+    return indexed
+
+
+def default(metric):
+    if 'avg' in metric:
+        return None
+    else:
+        return 0
 
 
 class Report(object):
@@ -72,26 +100,32 @@ class Report(object):
         self.raw = []
         self.queries = []
 
-        registry = query.api.all_columns
-        self.names = [header.name for header in headers]
-        self.columns = addressable.List([self.registry[header['name']] for header in raw['columnHeaders']],
-            indices=registry.indexed_on, insensitive=True)
-        self.metrics = [column for column in columns if column.type == 'metric']
-        self.dimensions = [column for column in columns if column.type == 'dimension']
+        all_columns = query.api.all_columns
+        report_columns = [column['name'] for column in raw['columnHeaders']]
+        self.columns = ColumnList([all_columns[column] for column in report_columns])
+        self.metrics = addressable.filter(lambda column: column.type == 'metric', self.columns)
+        self.dimensions = addressable.filter(lambda column: column.type == 'dimension', self.columns)
+        time_columns = ['date_hour', 'date', 'year_week', 'year_month', 'year']
+        try:
+            self.granularity = next(column for column in self.dimensions if column.slug in time_columns)
+        except StopIteration:
+            self.granularity = None
         slugs = [column.python_slug for column in self.columns]
         self.Row = collections.namedtuple('Row', slugs)
-        # TODO: remove after testing
-        #self.metrics = set()
-        #self.dimensions = set()
         self.rows = []
         self.append(raw, query)
+
+        self.since = self.until = None
+
+        if 'start_date' in raw:
+            self.since = datetime.strptime(raw['start_date'], '%Y-%m-%d')
+
+        if 'end_date' in raw:
+            self.until = datetime.strptime(raw['end_date'], '%Y-%m-%d')
 
     def append(self, raw, query):
         self.raw.append(raw)
         self.queries.append(query)
-        # TODO: remove after testing
-        #self.metrics.update(query.raw['metrics'])
-        #self.dimensions.update(query.raw.get('dimensions', []))
         self.is_complete = not 'nextLink' in raw
 
         casters = [column.cast for column in self.columns]
@@ -107,7 +141,6 @@ class Report(object):
         self.totals = raw['totalsForAllResults']
         # more intuitive when querying for just a single metric
         self.total = list(raw['totalsForAllResults'].values())[0]
-        # print(self.totals)
 
     @property
     def first(self):
@@ -135,8 +168,7 @@ class Report(object):
     @property
     def values(self):
         if len(self.metrics) == 1:
-            raw_metric = list(self.metrics).pop()
-            metric = self.columns[raw_metric]
+            metric = self.metrics[0]
             return self[metric]
         else:
             raise ValueError("This report contains multiple metrics. Please use `rows`, `first`, `last` or a column name.")
@@ -144,32 +176,31 @@ class Report(object):
     # TODO: it'd be nice to have metadata from `ga` available as
     # properties, rather than only having them in serialized form
     # (so e.g. the actual metric objects with both serialized name, slug etc.)
-    def __expand(report):
+    def __expand(self):
+        import ranges
+
         # 1. generate grid
+
         # 1a. generate date grid
-        #report.queries[0].raw['start_date']
-        #report.queries[0].raw['end_date']
-        since = datetime.strptime(report.queries[0].raw['start_date'], '%Y-%m-%d')
-        until = datetime.strptime(report.queries[0].raw['end_date'], '%Y-%m-%d') + relativedelta(days=1)
-        # TODO: it is possible to request multiple of these columns as dimensions,
-        # in which case the most granular of them should be extracted
-        time_column = {'year', 'year_month', 'year_week', 'date', 'date_hour'}.intersection(set(report.slugs)).pop()
-        time_step = INTERVALS[time_column]
-        time_ix = report.slugs.index(time_column)
-        #time_interval = ranges.date.interval(since, until)
+        since = self.since
+        until = self.until + relativedelta(days=1)
+        granularity = self.granularity.slug
+        dimensions = [column.slug for column in self.dimensions]
+        metrics = [column.slug for column in self.metrics]
+
+        time_step = INTERVAL_TIMEDELTAS[self.granularity.slug]
+        time_ix = report.columns.index(self.granularity)
         time_interval = (since, until)
         time_range = list(ranges.date.range(*time_interval, **time_step))
-        # TODO
-        time_slug = 'ga:dateHour'
 
         # 1b. generate dimension factor grid
-        factors = {dimension: set(report[dimension]) for dimension in set(report.dimensions) - {time_slug}}
+        factors = {dimension: set(report[dimension]) for dimension in set(dimensions) - {granularity}}
 
         # 1c. assemble grid
         grid = list(itertools.product(time_range, *factors.values()))
 
         # 2. fill in the grid with available data
-        ndim = len(report.dimensions)
+        ndim = len(self.dimensions)
         index = path(report.rows, *report.slugs[:ndim])
 
         filled = []
@@ -1056,6 +1087,8 @@ class RealTimeQuery(Query):
     def get(self):
         return self.execute()
 
+
+# TODO: consider moving the blueprint functionality to a separate Python package
 
 def describe(profile, description):
     """
