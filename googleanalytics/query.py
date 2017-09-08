@@ -107,7 +107,7 @@ class Report(object):
         self.dimensions = addressable.filter(lambda column: column.type == 'dimension', self.columns)
         time_columns = ['date_hour', 'date', 'year_week', 'year_month', 'year']
         try:
-            self.granularity = next(column for column in self.dimensions if column.slug in time_columns)
+            self.granularity = next(column for column in self.dimensions if column.python_slug in time_columns)
         except StopIteration:
             self.granularity = None
         slugs = [column.python_slug for column in self.columns]
@@ -117,11 +117,11 @@ class Report(object):
 
         self.since = self.until = None
 
-        if 'start_date' in raw:
-            self.since = datetime.strptime(raw['start_date'], '%Y-%m-%d')
+        if 'start-date' in raw['query']:
+            self.since = datetime.strptime(raw['query']['start-date'], '%Y-%m-%d')
 
-        if 'end_date' in raw:
-            self.until = datetime.strptime(raw['end_date'], '%Y-%m-%d')
+        if 'end-date' in raw['query']:
+            self.until = datetime.strptime(raw['query']['end-date'], '%Y-%m-%d')
 
     def append(self, raw, query):
         self.raw.append(raw)
